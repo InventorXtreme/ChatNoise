@@ -28,7 +28,7 @@ except:
     serversetup = input("IP: ")
     portsetupIN = input("port: ")
     portsetup = ":" + portsetupIN
-    config = {"username":"Guestsadf", "server":"127.0.0.1", "port": ":69"}
+    config = {"username":"DEFULT USER", "server":"127.0.0.1", "port": ":69"}
     config["server"] = serversetup
     config["port"] = portsetup
     config["username"] = namesetup
@@ -43,7 +43,6 @@ except:
 def changename():
     global user, server, port
     print("CONFIG NAME SETTUP STARTED")
-    #TODO: PROMPT
     namesetup = simpledialog.askstring("Chat Noise -> Settings -> Username", "Input New Username:")
     config = pickle.load(open("config.p", "rb"))
 
