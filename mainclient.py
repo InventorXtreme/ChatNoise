@@ -10,9 +10,9 @@ updategood = True
 from tkinter import simpledialog
 import os
 import webbrowser
-clientversion = "- 0.2b"
-
-
+clientversion = "- 0.2.2b"
+import urllib.request
+from PIL import Image, ImageTk
 
 global user,server,port
 try:
@@ -93,17 +93,41 @@ def changeport():
 
 
 
-
-
-
-def loadb64image():
+def loadimagebrowser():
     print("loaded")
     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
     url = "http://" + server+port+"/image/" + base64_img
     webbrowser.open(url,new=2)
 
 
-def encodeb64image():
+def loadimage():
+    print("loaded")
+    base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
+    url = "http://" + server+port+"/image/" + base64_img
+    #webbrowser.open(url,new=2)
+
+    try:
+        urllib.request.urlretrieve(url, "./cimg/cashedimage")
+        popup = tkinter.Toplevel(root)
+        img = Image.open("./cimg/cashedimage")
+        tatras = ImageTk.PhotoImage(img)
+
+        label = Label(popup, image=tatras)
+        label.pack()
+        popup.mainloop()
+    except FileNotFoundError:
+        os.mkdir("cimg")
+        urllib.request.urlretrieve(url, "./cimg/cashedimage")
+        popup = tkinter.Toplevel(root)
+        img = Image.open("./cimg/cashedimage")
+        tatras = ImageTk.PhotoImage(img)
+
+        label = Label(popup,image=tatras)
+        label.pack()
+        popup.mainloop()
+
+
+def uploadimage():
     print("encoded")
     url = "http://" + server + port + "/upimage"
     webbrowser.open(url,new=2)
@@ -194,9 +218,9 @@ settingsmenu.add_command(label="Change Port", command=changeport)
 
 codemenu = Menu(root)
 
-codemenu.add_command(label="Encode",command=encodeb64image)
-codemenu.add_command(label="Decode",command=loadb64image)
-
+codemenu.add_command(label="Upload", command=uploadimage)
+codemenu.add_command(label="Open", command=loadimage)
+codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
 FileMenu = Menu(menubar)
 
 #FileMenu.add_command(label="Settings",command=settings)
