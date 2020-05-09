@@ -13,6 +13,8 @@ import webbrowser
 clientversion = "- 0.2.2b"
 import urllib.request
 from PIL import Image, ImageTk
+root = Tk()
+from sframe import ScrollFrame, Example
 
 global user,server,port
 try:
@@ -126,11 +128,58 @@ def loadimage():
         label.pack()
         popup.mainloop()
 
+global img_data_dict
+img_data_dict = {}
+
+global imgpopup
+imgpopup = tkinter.Toplevel(root)
+global scrollFrame
+
+global img_names
+img_names = []
+def loadimagelist(img):
+    global scrollFrame
+    global img_data_dict
+    global imgpopup
+    print("loaded")
+    #base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
+    url = "http://" + server+port+"/image/" + img
+    #webbrowser.open(url,new=2)
+
+    try:
+        urllib.request.urlretrieve(url, "./cimg/cashedimage")
+        imgd = Image.open("./cimg/cashedimage")
+        img_data_dict[img] = ImageTk.PhotoImage(imgd)
+
+
+        label = Label(scrollFrame.viewPort, image=img_data_dict[img])
+
+        label.pack(side=TOP)
+        return label
+
+    except FileNotFoundError:
+        os.mkdir("cimg")
+        urllib.request.urlretrieve(url, "./cimg/cashedimage")
+        img = Image.open("./cimg/cashedimage")
+        img_data_dict[img] = ImageTk.PhotoImage(img)
+
+        label = Label(scrollFrame.viewPort, image=img_data_dict)
+        #label.pack()
+        return label
 
 def uploadimage():
     print("encoded")
     url = "http://" + server + port + "/upimage"
     webbrowser.open(url,new=2)
+
+def all_children (window) :
+    _list = window.winfo_children()
+
+    for item in _list :
+        if item.winfo_children() :
+            _list.extend(item.winfo_children())
+
+    return _list
 
 
 def openfile():
@@ -152,6 +201,20 @@ def send(senddata):
     print("sendt")
     try:
         outline = user + ": " + senddata
+    except TypeError:
+        messagebox.showerror("Chat Noise Config Error", "You must have a username to send a message")
+    servboi = "http://" + server + port + "?send="
+    toadd = getid()
+    added1 = int(toadd)
+    added2 = added1 + 1
+    addedout = str(added2)
+    out = servboi + outline + "&id=" + addedout
+    temp = requests.get(out)
+
+def sendnbs(senddata):
+    print("sendt")
+    try:
+        outline = senddata
     except TypeError:
         messagebox.showerror("Chat Noise Config Error", "You must have a username to send a message")
     servboi = "http://" + server + port + "?send="
@@ -193,7 +256,43 @@ def about():
                                               "Server Version: "+ serverversion)
 
 
-root = Tk()
+
+
+def imglistpopup():
+    global imgpopup
+    global img_data_dict
+    global img_list
+    widget_list = all_children(imgpopup)
+    for item in widget_list:
+        item.pack_forget()
+
+
+global ref_count
+ref_count = 0
+def refresh(h):
+    global ref_count
+    print("refeshed")
+    while True:
+        if updategood != False:
+            x = get_data()
+            if ref_count % 5 == 0:
+                try:
+                    imgextract()
+                except tkinter.TclError:
+                    pass
+
+            text.delete('1.0', END)
+            text.insert(END, x)
+            text.see(END)
+            ref_count +=1
+            time.sleep(3)
+
+def img_sause():
+    base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image to send")
+    out = "img|" + base64_img
+    sendnbs(out)
+
+
 root.configure(background='grey10')
 Title = "Python Chat Noise Client " + clientversion
 root.title(Title)
@@ -217,10 +316,16 @@ settingsmenu.add_command(label="Change Server", command=changeserver)
 settingsmenu.add_command(label="Change Port", command=changeport)
 
 codemenu = Menu(root)
+def imglistpopup_caller():
+    global imgpopup
+    imgpopup = tkinter.Toplevel(root)
+    imglistpopup()
 
 codemenu.add_command(label="Upload", command=uploadimage)
 codemenu.add_command(label="Open", command=loadimage)
 codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
+codemenu.add_command(label="Imagelist", command=imglistpopup_caller)
+codemenu.add_command(label="SAUSE", command=img_sause)
 FileMenu = Menu(menubar)
 
 #FileMenu.add_command(label="Settings",command=settings)
@@ -233,7 +338,7 @@ menubar.add_cascade(label="Encode/Decode Images",menu=codemenu)
 menubar.add_cascade(label="Settings", menu=settingsmenu)
 root.config(menu=menubar)
 
-def update_display():
+def get_data():
     print("display")
     iservboi = "http://" + server + port + "?get"
     try:
@@ -247,17 +352,48 @@ def update_display():
         return fin.read()
 
 
-def refresh(h):
-    print("refeshed")
-    while True:
-        if updategood != False:
-            x = update_display()
-            text.delete('1.0', END)
-            text.insert(END, x)
-            text.see(END)
-            time.sleep(3)
+global img_list
+img_list = {}
 
+def imgextract():
+    imglistpopup()
+    global img_list
+    global img_names
+    global imgpopup
+    global scrollFrame
+    img_list.clear()
+    cnt = 1
+    cntimg = 0
+    iservboi = "http://" + server + port + "?get"
+    scrollFrame = ScrollFrame(imgpopup)  # add a new scrollable frame.
 
+    try:
+        down = requests.get(iservboi)
+    except requests.exceptions.ConnectionError:
+        return "Error Connecting to server"
+    x = down.text
+    with open("chatlogclienti.txt", "w+") as file:
+        file.write(x)
+    with open("chatlogclienti.txt", 'r') as fin:
+        filestring = fin.read()
+        linelist = filestring.split("\n")
+        linelist.reverse()
+
+        while True:
+            goto = False
+            try:
+                line = linelist[cnt]
+            except IndexError:
+                break
+
+            command = line.split("|")
+            if command[0] == "img" and cntimg < 5:
+                img_list[command[1]] = loadimagelist(command[1])
+                img_names.append(command[1])
+                cntimg += 1
+
+            cnt += 1
+    scrollFrame.pack(side="top", fill="both", expand=True)
 
 
 GuiLoop = threading.Thread(target=refresh, args=(1,),daemon=True)
