@@ -10,7 +10,7 @@ updategood = True
 from tkinter import simpledialog
 import os
 import webbrowser
-clientversion = "- 0.2.2b"
+clientversion = "- 0.2.9a"
 import urllib.request
 from PIL import Image, ImageTk
 root = Tk()
