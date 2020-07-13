@@ -48,4 +48,4 @@ class Server:
             except socket.error:
                 c.close()
 
-server = Server()
+
