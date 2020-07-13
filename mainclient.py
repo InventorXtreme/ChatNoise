@@ -5,18 +5,22 @@ import time
 import pickle
 import tkinter
 from tkinter import messagebox
+
+
 global updategood
 updategood = True
 from tkinter import simpledialog
 import os
 import webbrowser
+
 clientversion = "- 0.2.9a"
 import urllib.request
 from PIL import Image, ImageTk
+
 root = Tk()
 from sframe import ScrollFrame, Example
 
-global user,server,port
+global user, server, port
 try:
     config = pickle.load(open("config.p", "rb"))
     user = config["username"]
@@ -30,17 +34,18 @@ except:
     serversetup = input("IP: ")
     portsetupIN = input("port: ")
     portsetup = ":" + portsetupIN
-    config = {"username":"DEFULT USER", "server":"127.0.0.1", "port": ":69"}
+    config = {"username": "DEFULT USER", "server": "127.0.0.1", "port": ":69"}
     config["server"] = serversetup
     config["port"] = portsetup
     config["username"] = namesetup
-    pickle.dump(config, open("config.p","wb+"))
+    pickle.dump(config, open("config.p", "wb+"))
     config = pickle.load(open("config.p", "rb"))
     user = config["username"]
     server = config["server"]
     port = config["port"]
     print("config loaded")
     print(user)
+
 
 def changename():
     global user, server, port
@@ -58,6 +63,7 @@ def changename():
     print("config loaded")
     print(user)
 
+
 def changeserver():
     global user, server, port
     print("CONFIG NAME SETTUP STARTED")
@@ -74,6 +80,7 @@ def changeserver():
     port = config["port"]
     print("config loaded")
     print(user)
+
 
 def changeport():
     global user, server, port
@@ -93,20 +100,18 @@ def changeport():
     print(user)
 
 
-
-
 def loadimagebrowser():
     print("loaded")
     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
-    url = "http://" + server+port+"/image/" + base64_img
-    webbrowser.open(url,new=2)
+    url = "http://" + server + port + "/image/" + base64_img
+    webbrowser.open(url, new=2)
 
 
 def loadimage():
     print("loaded")
     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
-    url = "http://" + server+port+"/image/" + base64_img
-    #webbrowser.open(url,new=2)
+    url = "http://" + server + port + "/image/" + base64_img
+    # webbrowser.open(url,new=2)
 
     try:
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
@@ -124,35 +129,42 @@ def loadimage():
         img = Image.open("./cimg/cashedimage")
         tatras = ImageTk.PhotoImage(img)
 
-        label = Label(popup,image=tatras)
+        label = Label(popup, image=tatras)
         label.pack()
         popup.mainloop()
+
 
 global img_data_dict
 img_data_dict = {}
 
 global imgpopup
 imgpopup = tkinter.Toplevel(root)
+imgpopup.title("5 most recent images")
 global scrollFrame
 
 global img_names
 img_names = []
+global loadimagelist_count
+loadimagelist_count = 0
+
+
 def loadimagelist(img):
+    global loadimagelist_count
     global scrollFrame
     global img_data_dict
     global imgpopup
     print("loaded")
-    #base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
-    url = "http://" + server+port+"/image/" + img
-    #webbrowser.open(url,new=2)
+    loadimagelist_count += 1
+    # base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
+    url = "http://" + server + port + "/image/" + img
+    # webbrowser.open(url,new=2)
 
     try:
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         imgd = Image.open("./cimg/cashedimage")
-        img_data_dict[img] = ImageTk.PhotoImage(imgd)
+        img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
 
-
-        label = Label(scrollFrame.viewPort, image=img_data_dict[img])
+        label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
 
         label.pack(side=TOP)
         return label
@@ -160,23 +172,25 @@ def loadimagelist(img):
     except FileNotFoundError:
         os.mkdir("cimg")
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
-        img = Image.open("./cimg/cashedimage")
-        img_data_dict[img] = ImageTk.PhotoImage(img)
+        imgd = Image.open("./cimg/cashedimage")
+        img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
 
-        label = Label(scrollFrame.viewPort, image=img_data_dict)
-        #label.pack()
+        label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
+        label.pack(side=TOP)
         return label
+
 
 def uploadimage():
     print("encoded")
     url = "http://" + server + port + "/upimage"
-    webbrowser.open(url,new=2)
+    webbrowser.open(url, new=2)
 
-def all_children (window) :
+
+def all_children(window):
     _list = window.winfo_children()
 
-    for item in _list :
-        if item.winfo_children() :
+    for item in _list:
+        if item.winfo_children():
             _list.extend(item.winfo_children())
 
     return _list
@@ -185,17 +199,23 @@ def all_children (window) :
 def openfile():
     print("openfiled")
     os.system("out.txt")
+
+
 def sync():
     print("sync")
     send()
+
+
 def send_clip():
     print("send_clip")
     send(root.clipboard_get())
+
 
 def getid():
     servboi = "http://" + server + port + "/messageid/"
     out = requests.get(servboi)
     return out.text
+
 
 def send(senddata):
     print("sendt")
@@ -211,6 +231,7 @@ def send(senddata):
     out = servboi + outline + "&id=" + addedout
     temp = requests.get(out)
 
+
 def sendnbs(senddata):
     print("sendt")
     try:
@@ -225,20 +246,25 @@ def sendnbs(senddata):
     out = servboi + outline + "&id=" + addedout
     temp = requests.get(out)
 
+
 def setupdate():
     print("what does this do")
     global updategood
     updategood = not updategood
 
+
 def sendread(a):
     print("read")
     try:
         send(chatbox.get())
-        chatbox.delete(0,END)
+        chatbox.delete(0, END)
     except requests.exceptions.ConnectionError:
         tkinter.messagebox.showerror(title="NetError", message="Connection Error sending data to server")
+
+
 def sendreadb():
     sendread("f")
+
 
 def about():
     print("abouted")
@@ -250,12 +276,10 @@ def about():
         serverversion = "Error connecting to server"
 
     messagebox.showinfo(title="About", message="ChatNoise -> A chat client/protocol for the people\n"
-                                               "Developed By: Joe Mama\n"
-                                               "Client Version " + clientversion +""
-                                                                                 " using Tkinter GUI\n"
-                                              "Server Version: "+ serverversion)
-
-
+                                               "Developed By: Alex Moening\n"
+                                               "Client Version " + clientversion + ""
+                                                                                   " using Tkinter GUI\n"
+                                                                                   "Server Version: " + serverversion)
 
 
 def imglistpopup():
@@ -269,6 +293,8 @@ def imglistpopup():
 
 global ref_count
 ref_count = 0
+
+
 def refresh(h):
     global ref_count
     print("refeshed")
@@ -284,8 +310,9 @@ def refresh(h):
             text.delete('1.0', END)
             text.insert(END, x)
             text.see(END)
-            ref_count +=1
+            ref_count += 1
             time.sleep(3)
+
 
 def img_sause():
     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image to send")
@@ -296,47 +323,55 @@ def img_sause():
 root.configure(background='grey10')
 Title = "Python Chat Noise Client " + clientversion
 root.title(Title)
-root.bind('<Return>',sendread)
-text = Text(root,width=80,height=20,bg="grey10",fg="white")
+root.bind('<Return>', sendread)
+text = Text(root, width=80, height=20, bg="grey10", fg="white")
 text.pack()
-chatboxframe = Frame(root,bg="grey10")
+chatboxframe = Frame(root, bg="grey10")
 chatboxframe.pack()
-chatbox = Entry(chatboxframe,width = 100,bg="grey10",fg="white")
-chatbox.pack(side = LEFT)
-sendb = Button(chatboxframe,command = sendreadb,text="send",bg="grey10",fg="red3")
+chatbox = Entry(chatboxframe, width=100, bg="grey10", fg="white")
+chatbox.pack(side=LEFT)
+sendb = Button(chatboxframe, command=sendreadb, text="send", bg="grey10", fg="red3")
 sendb.pack(side=RIGHT)
 
 menubar = Menu(root)
 
+Plugs = Menu(root)
 
 settingsmenu = Menu(root)
+
 
 settingsmenu.add_command(label="Change Username", command=changename)
 settingsmenu.add_command(label="Change Server", command=changeserver)
 settingsmenu.add_command(label="Change Port", command=changeport)
 
 codemenu = Menu(root)
+
+
 def imglistpopup_caller():
     global imgpopup
     imgpopup = tkinter.Toplevel(root)
     imglistpopup()
+
 
 codemenu.add_command(label="Upload", command=uploadimage)
 codemenu.add_command(label="Open", command=loadimage)
 codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
 codemenu.add_command(label="Imagelist", command=imglistpopup_caller)
 codemenu.add_command(label="SAUSE", command=img_sause)
+
 FileMenu = Menu(menubar)
 
-#FileMenu.add_command(label="Settings",command=settings)
+# FileMenu.add_command(label="Settings",command=settings)
 
-FileMenu.add_command(label="Enable/Disable Refresh",command=setupdate)
-FileMenu.add_command(label="Send Clipboard",command=send_clip)
-FileMenu.add_command(label="About",command=about)
-menubar.add_cascade(label="File",menu=FileMenu)
-menubar.add_cascade(label="Encode/Decode Images",menu=codemenu)
+FileMenu.add_command(label="Enable/Disable Refresh", command=setupdate)
+FileMenu.add_command(label="Send Clipboard", command=send_clip)
+FileMenu.add_command(label="About", command=about)
+menubar.add_cascade(label="File", menu=FileMenu)
+menubar.add_cascade(Label="Pluggins", menu=Plugs)
+menubar.add_cascade(label="Encode/Decode Images", menu=codemenu)
 menubar.add_cascade(label="Settings", menu=settingsmenu)
 root.config(menu=menubar)
+
 
 def get_data():
     print("display")
@@ -354,6 +389,7 @@ def get_data():
 
 global img_list
 img_list = {}
+
 
 def imgextract():
     imglistpopup()
@@ -395,8 +431,21 @@ def imgextract():
             cnt += 1
     scrollFrame.pack(side="top", fill="both", expand=True)
 
+#def FPSLoad():
+#    fpsfile =  filedialog.askopenfilename(initialdir = "C:/",title = "Select file",filetypes = (("FPS File","*.FPS"),("all files","*.*")))
+#    FPSF = open(fpsfile, "rU")
+#    pgrm=FPSF.read().replace('\n', '')
+#    FPSF.close()
+#    FPSFCommandList = pgrm.split(";")
 
-GuiLoop = threading.Thread(target=refresh, args=(1,),daemon=True)
+#def FPSRun(P):
+#   FPSPlugin = P
+#    com = 1
+#    while True:
+#        parse(FPSPlugin[com])
+#        com += 1
+
+GuiLoop = threading.Thread(target=refresh, args=(1,), daemon=True)
 GuiLoop.start()
 
 root.mainloop()
