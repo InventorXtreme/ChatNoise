@@ -1,20 +1,21 @@
 import flask
 from flask import request, Response
 import requests
-import base64
 from flask import Flask, request, redirect, send_file
 from werkzeug.utils import secure_filename
 import os
 import imghdr
+import voiceserver
 servversion = "S0.2b"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
-ALLOWED_EXTENSIONS = set(['jpg', 'png', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['jpg', 'png', 'jpeg', 'gif','py','txt'])
 UPLOAD_PATH = './image'
 app.config['UPLOAD_PATH'] = UPLOAD_PATH
 global messageid
 messageid = 0
-
+global voiceserveron
+voiceserveron = False
 global msgsync
 msgsync = 0
 global servname
@@ -100,6 +101,7 @@ def sync():
 
 @app.route('/', methods=['GET'])
 def home():
+    global voiceserveron
     global  messageid
     global msgsync
     if "send" in request.args:
@@ -121,9 +123,14 @@ def home():
         sync()
         return "hek"
 
+    elif "vstart" in request.args:
+        if voiceserveron == False:
+            voiceserveron = True
+            voiceserverclass = voiceserver.Server()
+
     else:
         return "no request"
 
 
-app.run(host = "0.0.0.0", port = 69)
+app.run(host = "0.0.0.0", port = 80)
 
