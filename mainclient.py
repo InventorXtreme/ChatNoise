@@ -67,7 +67,6 @@ def changename():
 def changeserver():
     global user, server, port
     print("CONFIG NAME SETTUP STARTED")
-    # TODO: PROMPTs
     namesetup = simpledialog.askstring("Chat Noise -> Settings -> Server", "Input New Server:")
     config = pickle.load(open("config.p", "rb"))
 
@@ -85,7 +84,7 @@ def changeserver():
 def changeport():
     global user, server, port
     print("CONFIG NAME SETTUP STARTED")
-    # TODO: PROMPT
+
     namesetup = simpledialog.askstring("Chat Noise -> Settings -> Port", "Input New Port:")
     config = pickle.load(open("config.p", "rb"))
 
@@ -367,7 +366,6 @@ FileMenu.add_command(label="Enable/Disable Refresh", command=setupdate)
 FileMenu.add_command(label="Send Clipboard", command=send_clip)
 FileMenu.add_command(label="About", command=about)
 menubar.add_cascade(label="File", menu=FileMenu)
-menubar.add_cascade(Label="Pluggins", menu=Plugs)
 menubar.add_cascade(label="Encode/Decode Images", menu=codemenu)
 menubar.add_cascade(label="Settings", menu=settingsmenu)
 root.config(menu=menubar)
@@ -430,20 +428,6 @@ def imgextract():
 
             cnt += 1
     scrollFrame.pack(side="top", fill="both", expand=True)
-
-#def FPSLoad():
-#    fpsfile =  filedialog.askopenfilename(initialdir = "C:/",title = "Select file",filetypes = (("FPS File","*.FPS"),("all files","*.*")))
-#    FPSF = open(fpsfile, "rU")
-#    pgrm=FPSF.read().replace('\n', '')
-#    FPSF.close()
-#    FPSFCommandList = pgrm.split(";")
-
-#def FPSRun(P):
-#   FPSPlugin = P
-#    com = 1
-#    while True:
-#        parse(FPSPlugin[com])
-#        com += 1
 
 GuiLoop = threading.Thread(target=refresh, args=(1,), daemon=True)
 GuiLoop.start()

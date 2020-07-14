@@ -5,8 +5,7 @@ from flask import Flask, request, redirect, send_file
 from werkzeug.utils import secure_filename
 import os
 import imghdr
-import voiceserver
-servversion = "S0.2b"
+servversion = "S0.2.1"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 ALLOWED_EXTENSIONS = set(['jpg', 'png', 'jpeg', 'gif','py','txt'])
@@ -14,8 +13,6 @@ UPLOAD_PATH = './image'
 app.config['UPLOAD_PATH'] = UPLOAD_PATH
 global messageid
 messageid = 0
-global voiceserveron
-voiceserveron = False
 global msgsync
 msgsync = 0
 global servname
@@ -35,13 +32,16 @@ def version():
 
 @app.route('/image/<image_name>', methods=['GET'])
 def get_image(image_name):
-    if image_name is not None:
-        image_name = secure_filename(image_name)
-        image = open(os.path.join(app.config['UPLOAD_PATH'], image_name))
-        god_christ_help = ".\image/" + image_name
-        return send_file(god_christ_help)
-    else:
-        return 'error'
+    try:
+        if image_name is not None:
+            image_name = secure_filename(image_name)
+            image = open(os.path.join(app.config['UPLOAD_PATH'], image_name))
+            god_christ_help = ".\image/" + image_name
+            return send_file(god_christ_help)
+        else:
+            return 'error'
+    except:
+        return send_file("image/404error.png",)
 
 @app.route('/messageid/')
 def messageidget():
@@ -66,8 +66,6 @@ def upload_image():
             return "Upload failed."
     else:
         return '<form action="." method="post" enctype="multipart/form-data"><input type="file" name="file" /><button type="submit">Upload</button></form>'
-
-
 
 try:
     chatlogtt = open("chatlog.txt",'a')
@@ -96,13 +94,9 @@ def sync():
             print(outbound)
             send1(outbound)
 
-
-
-
 @app.route('/', methods=['GET'])
 def home():
-    global voiceserveron
-    global  messageid
+    global messageid
     global msgsync
     if "send" in request.args:
         if int(request.args['id']) > messageid:
@@ -123,14 +117,7 @@ def home():
         sync()
         return "hek"
 
-    elif "vstart" in request.args:
-        if voiceserveron == False:
-            voiceserveron = True
-            voiceserverclass = voiceserver.Server()
-
     else:
         return "no request"
 
-
 app.run(host = "0.0.0.0", port = 80)
-
