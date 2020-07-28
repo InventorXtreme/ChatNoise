@@ -5,15 +5,16 @@ import time
 import pickle
 import tkinter
 from tkinter import messagebox
+import imghdr
 
-from  winmagic import magic
+#import magic
 global updategood
 updategood = True
 from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.2.14"
+clientversion = "- 0.2.15"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -359,9 +360,9 @@ def loadimagelist(img):
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         imgd = Image.open("./cimg/cashedimage")
         img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
-        print(magic.from_file('./cimg/cashedimage', mime=True))
-        filetype = magic.from_file('./cimg/cashedimage', mime=True)
-        if filetype != "image/gif":
+        #print(magic.from_file('./cimg/cashedimage', mime=True))
+        filetype = imghdr.what("./cimg/cashedimage", h=None)
+        if filetype != "gif":
             label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
             label.bind("<Button-1>",lambda boi: openinpreview(img))
             label.pack(side=TOP)
@@ -376,9 +377,9 @@ def loadimagelist(img):
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         imgd = Image.open("./cimg/cashedimage")
         img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
-        print(magic.from_file('./cimg/cashedimage', mime=True))
-        filetype = magic.from_file('./cimg/cashedimage', mime=True)
-        if filetype != "image/gif":
+        #print(magic.from_file('./cimg/cashedimage', mime=True))
+        filetype = imghdr.what("./cimg/cashedimage", h=None)
+        if filetype != "gif":
             label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
             label.bind("<Button-1>", lambda boi: openinpreview(img))
             label.pack(side=TOP)
