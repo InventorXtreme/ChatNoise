@@ -355,8 +355,8 @@ def imglistpopup_caller():
 codemenu.add_command(label="Upload", command=uploadimage)
 codemenu.add_command(label="Open", command=loadimage)
 codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
-codemenu.add_command(label="Imagelist", command=imglistpopup_caller)
-codemenu.add_command(label="SAUSE", command=img_sause)
+codemenu.add_command(label="Open Image List", command=imglistpopup_caller)
+codemenu.add_command(label="Add Image to Image List", command=img_sause)
 
 FileMenu = Menu(menubar)
 
