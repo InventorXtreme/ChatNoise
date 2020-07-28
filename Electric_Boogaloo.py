@@ -6,14 +6,14 @@ import pickle
 import tkinter
 from tkinter import messagebox
 
-
+from  winmagic import magic
 global updategood
 updategood = True
 from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.2.12"
+clientversion = "- 0.2.14"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -107,10 +107,133 @@ def loadimagebrowser():
     url = "http://" + server + port + "/image/" + base64_img
     webbrowser.open(url, new=2)
 
+class AnimatedGIF(Label, object):
+    def __init__(self, master, path, forever=True):
+        self._master = master
+        self._loc = 0
+        self._forever = forever
+
+        self._is_running = False
+
+        im = Image.open(path)
+        self._frames = []
+        i = 0
+        try:
+            while True:
+                photoframe = ImageTk.PhotoImage(im.copy().convert('RGBA'))
+                self._frames.append(photoframe)
+
+                i += 1
+                im.seek(i)
+        except EOFError:
+            pass
+
+        self._last_index = len(self._frames) - 1
+
+        try:
+            self._delay = im.info['duration']
+        except:
+            self._delay = 100
+
+        self._callback_id = None
+
+        super(AnimatedGIF, self).__init__(master, image=self._frames[0])
+
+    def start_animation(self, frame=None):
+        if self._is_running: return
+
+        if frame is not None:
+            self._loc = 0
+            self.configure(image=self._frames[frame])
+
+        self._master.after(self._delay, self._animate_GIF)
+        self._is_running = True
+
+    def stop_animation(self):
+        if not self._is_running: return
+
+        if self._callback_id is not None:
+            self.after_cancel(self._callback_id)
+            self._callback_id = None
+
+        self._is_running = False
+
+    def _animate_GIF(self):
+        self._loc += 1
+        self.configure(image=self._frames[self._loc])
+
+        if self._loc == self._last_index:
+            if self._forever:
+                self._loc = 0
+                self._callback_id = self._master.after(self._delay, self._animate_GIF)
+            else:
+                self._callback_id = None
+                self._is_running = False
+        else:
+            self._callback_id = self._master.after(self._delay, self._animate_GIF)
+
+    def pack(self, start_animation=True, **kwargs):
+        if start_animation:
+            self.start_animation()
+
+        super(AnimatedGIF, self).pack(**kwargs)
+
+    def grid(self, start_animation=True, **kwargs):
+        if start_animation:
+            self.start_animation()
+
+        super(AnimatedGIF, self).grid(**kwargs)
+
+    def place(self, start_animation=True, **kwargs):
+        if start_animation:
+            self.start_animation()
+
+        super(AnimatedGIF, self).place(**kwargs)
+
+    def pack_forget(self, **kwargs):
+        self.stop_animation()
+
+        super(AnimatedGIF, self).pack_forget(**kwargs)
+
+    def grid_forget(self, **kwargs):
+        self.stop_animation()
+
+        super(AnimatedGIF, self).grid_forget(**kwargs)
+
+    def place_forget(self, **kwargs):
+        self.stop_animation()
+
+        super(AnimatedGIF, self).place_forget(**kwargs)
+
+# def loadimage():
+#     print("loaded")
+#     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
+#     url = "http://" + server + port + "/image/" + base64_img
+#     # webbrowser.open(url,new=2)
+#
+#     try:
+#         urllib.request.urlretrieve(url, "./cimg/cashedimage")
+#         popup = tkinter.Toplevel(root)
+#         img = Image.open("./cimg/cashedimage")
+#         tatras = ImageTk.PhotoImage(img)
+#
+#         label = Label(popup, image=tatras)
+#         label.pack()
+#         popup.mainloop()
+#     except FileNotFoundError:
+#         os.mkdir("cimg")
+#         urllib.request.urlretrieve(url, "./cimg/cashedimage")
+#         popup = tkinter.Toplevel(root)
+#         img = Image.open("./cimg/cashedimage")
+#         tatras = ImageTk.PhotoImage(img)
+#
+#         label = Label(popup, image=tatras)
+#         label.pack()
+#         popup.mainloop()
 
 def loadimage():
-    print("loaded")
     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
+    print("loaded")
     url = "http://" + server + port + "/image/" + base64_img
     # webbrowser.open(url,new=2)
 
@@ -118,22 +241,93 @@ def loadimage():
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         popup = tkinter.Toplevel(root)
         img = Image.open("./cimg/cashedimage")
+        width, height = img.size
+
+
         tatras = ImageTk.PhotoImage(img)
 
-        label = Label(root, image=tatras)
-        label.pack()
+        #label = Label(popup, image=tatras)
+        #label.pack(expand=True,fill=BOTH)
+        packboi = ResizeFrame(popup,picimg=img)
+        packboi.pack(fill=BOTH, expand=YES)
         popup.mainloop()
+
     except FileNotFoundError:
         os.mkdir("cimg")
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         popup = tkinter.Toplevel(root)
         img = Image.open("./cimg/cashedimage")
+        width, height = img.size
+
         tatras = ImageTk.PhotoImage(img)
 
-        label = Label(root, image=tatras)
-        label.pack()
+        # label = Label(popup, image=tatras)
+        # label.pack(expand=True,fill=BOTH)
+        packboi = ResizeFrame(popup, picimg=img)
+        packboi.pack(fill=BOTH, expand=YES)
         popup.mainloop()
 
+class ResizeFrame(Frame):
+    def __init__(self, master, *pargs,picimg):
+        Frame.__init__(self, master, *pargs)
+
+
+
+        self.image = picimg
+        self.img_copy= self.image.copy()
+
+
+        self.background_image = ImageTk.PhotoImage(self.image)
+
+        self.background = Label(self, image=self.background_image)
+        self.background.pack(fill=BOTH, expand=True)
+        self.background.bind('<Configure>', self._resize_image)
+
+    def _resize_image(self,event):
+
+        new_width = event.width -4
+        new_height = event.height -4
+
+        self.image = self.img_copy.resize((new_width, new_height))
+
+        self.background_image = ImageTk.PhotoImage(self.image)
+        self.background.configure(image =  self.background_image)
+
+
+def openinpreview(base64_img):
+    print("loaded")
+    url = "http://" + server + port + "/image/" + base64_img
+    # webbrowser.open(url,new=2)
+
+    try:
+        urllib.request.urlretrieve(url, "./cimg/cashedimage")
+        popup = tkinter.Toplevel(root)
+        img = Image.open("./cimg/cashedimage")
+        width, height = img.size
+
+
+        tatras = ImageTk.PhotoImage(img)
+
+        #label = Label(popup, image=tatras)
+        #label.pack(expand=True,fill=BOTH)
+        packboi = ResizeFrame(popup,picimg=img)
+        packboi.pack(fill=BOTH, expand=YES)
+        popup.mainloop()
+
+    except FileNotFoundError:
+        os.mkdir("cimg")
+        urllib.request.urlretrieve(url, "./cimg/cashedimage")
+        popup = tkinter.Toplevel(root)
+        img = Image.open("./cimg/cashedimage")
+        width, height = img.size
+
+        tatras = ImageTk.PhotoImage(img)
+
+        # label = Label(popup, image=tatras)
+        # label.pack(expand=True,fill=BOTH)
+        packboi = ResizeFrame(popup, picimg=img)
+        packboi.pack(fill=BOTH, expand=YES)
+        popup.mainloop()
 
 global img_data_dict
 img_data_dict = {}
@@ -147,6 +341,7 @@ global img_names
 img_names = []
 global loadimagelist_count
 loadimagelist_count = 0
+
 
 
 def loadimagelist(img):
@@ -164,21 +359,34 @@ def loadimagelist(img):
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         imgd = Image.open("./cimg/cashedimage")
         img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
-
-        label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
-
-        label.pack(side=TOP)
-        return label
+        print(magic.from_file('./cimg/cashedimage', mime=True))
+        filetype = magic.from_file('./cimg/cashedimage', mime=True)
+        if filetype != "image/gif":
+            label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
+            label.bind("<Button-1>",lambda boi: openinpreview(img))
+            label.pack(side=TOP)
+            return label
+        else:
+            label = AnimatedGIF(scrollFrame.viewPort, "./cimg/cashedimage")
+            label.bind("<Button-1>", lambda boi: openinpreview(img))
+            label.pack(side=TOP)
 
     except FileNotFoundError:
         os.mkdir("cimg")
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         imgd = Image.open("./cimg/cashedimage")
         img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
-
-        label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
-        label.pack(side=TOP)
-        return label
+        print(magic.from_file('./cimg/cashedimage', mime=True))
+        filetype = magic.from_file('./cimg/cashedimage', mime=True)
+        if filetype != "image/gif":
+            label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
+            label.bind("<Button-1>", lambda boi: openinpreview(img))
+            label.pack(side=TOP)
+            return label
+        else:
+            label = AnimatedGIF(scrollFrame.viewPort, "./cimg/cashedimage")
+            label.bind("<Button-1>", lambda boi: openinpreview(img))
+            label.pack(side=TOP)
 
 
 def uploadimage():
@@ -244,7 +452,7 @@ def sendnbs(senddata):
     added1 = int(toadd)
     added2 = added1 + 1
     addedout = str(added2)
-    out = servboi + outline + "&id=" + addedout
+    out = servboi + outline + "&id=" + addedout + "\n"
     temp = requests.get(out)
 
 
@@ -304,7 +512,7 @@ def imglistpopup():
        widget_list = list(filter(lambda a: a != x, widget_list))
     print(widget_list)
     for item in widget_list:
-        item.pack_forget()
+        item.destroy()
     imglistcount += 1
 
 
