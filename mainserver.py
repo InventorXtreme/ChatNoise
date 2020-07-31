@@ -5,6 +5,7 @@ from flask import Flask, request, redirect, send_file
 from werkzeug.utils import secure_filename
 import os
 import imghdr
+import sys
 servversion = "S0.3a"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -114,9 +115,36 @@ def home():
         if int(request.args['id']) > messageid:
             chatlog = open("chatlog.txt", 'a')
             message = request.args['cmd']
+            msglist = message.split(" ")
             vermessage = message + '\n'
-            if message == "@boom":
-                chatlog.write("Reee\n")
+            if msglist[0] == "@sever":
+                chatlog.close()
+                if msglist[1] == "boom":
+                    n = 3
+                    nfirstlines = []
+
+                    with open("chatlog.txt") as f, open("bigfiletmp.txt", "w") as out:
+                        for x in range(n):
+                            nfirstlines.append(next(f))
+                        for line in f:
+                            out.write(line)
+
+                    # NB : it seems that `os.rename()` complains on some systems
+                    # if the destination file already exists.
+                    os.remove("chatlog.txt")
+                    os.rename("bigfiletmp.txt", "chatlog.txt")
+                try:
+                    if msglist[1] == "stop" and msglist[2] == "69420":
+                        vermessage = "@sever stop ****\n"
+                        func = request.environ.get('werkzeug.server.shutdown')
+                        func()
+                except:
+                    pass
+            try:
+                chatlog = open("chatlog.txt", 'a')
+            except:
+                pass
+
             chatlog.write(vermessage)
             chatlog.close()
             messageid += 1

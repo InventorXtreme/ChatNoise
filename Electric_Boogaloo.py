@@ -6,7 +6,7 @@ import pickle
 import tkinter
 from tkinter import messagebox
 import imghdr
-
+import re
 #import magic
 global updategood
 updategood = True
@@ -14,7 +14,7 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.3a"
+clientversion = "- 0.3.2"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -48,6 +48,47 @@ except:
     port = config["port"]
     print("config loaded")
     print(user)
+
+class CustomText(Text):
+    '''A text widget with a new method, highlight_pattern()
+
+    example:
+
+    text = CustomText()
+    text.tag_configure("red", foreground="#ff0000")
+    text.highlight_pattern("this should be red", "red")
+
+    The highlight_pattern method is a simplified python
+    version of the tcl code at http://wiki.tcl.tk/3246
+    '''
+    def __init__(self, *args, **kwargs):
+        Text.__init__(self, *args, **kwargs)
+
+    def highlight_pattern(self, pattern, tag, start="1.0", end="end",
+                          regexp=False):
+        '''Apply the given tag to all text that matches the given pattern
+
+        If 'regexp' is set to True, pattern will be treated as a regular
+        expression according to Tcl's regular expression syntax.
+        '''
+
+        start = self.index(start)
+        end = self.index(end)
+        self.mark_set("matchStart", start)
+        self.mark_set("matchEnd", start)
+        self.mark_set("searchLimit", end)
+
+        count = IntVar()
+        indexlist = []
+        while True:
+
+            index = self.search(pattern, "matchEnd","searchLimit",
+                                count=count, regexp=regexp)
+            if index == "": break
+            if count.get() == 0: break # degenerate pattern which matches zero-length strings
+            self.mark_set("matchStart", index)
+            self.mark_set("matchEnd", "%s+%sc" % (index, count.get()))
+            self.tag_add(tag, "matchStart", "matchEnd")
 
 
 def changename():
@@ -303,6 +344,7 @@ def openinpreview(base64_img):
     try:
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         popup = tkinter.Toplevel(root)
+        popup.title(base64_img)
         img = Image.open("./cimg/cashedimage")
         width, height = img.size
 
@@ -319,6 +361,7 @@ def openinpreview(base64_img):
         os.mkdir("cimg")
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         popup = tkinter.Toplevel(root)
+        popup.title(base64_img)
         img = Image.open("./cimg/cashedimage")
         width, height = img.size
 
@@ -558,9 +601,6 @@ def refresh(h):
                     imgextract()
                 except tkinter.TclError:
                     pass
-
-
-
             text.delete('1.0', END)
             text.insert(END, x)
             text.see(END)
@@ -573,6 +613,13 @@ def refresh(h):
             #     textlabellist[cnt].pack()
             #     cnt += 1
             ref_count += 1
+            text.tag_configure("red", foreground="Red")
+            text.tag_configure("blue",foreground="#00c0FF")
+            text.tag_configure("green",foreground="#00ff00")
+            text.highlight_pattern("/.*:", "blue", regexp=True,start="end-25l")
+            text.highlight_pattern("=.*:", "green",regexp=True,start="end-25l")
+            text.highlight_pattern("-.*:", "red", regexp=True,start="end-25l")
+            text.highlight_pattern(r"\(DEV\)", "blue", regexp=True,start="end-10l")
             time.sleep(3)
 
 
@@ -590,7 +637,7 @@ root.bind('<Return>', sendread)
 chatboxframe = Frame(m, bg="grey10")
 chatboxframe.pack(side="left",expand=True,fill=BOTH)
 m.add(chatboxframe)
-text = Text(chatboxframe, bg="grey10", fg="white")
+text = CustomText(chatboxframe, bg="grey10", fg="white")
 text.pack(expand=True,fill=BOTH)
 chatbox = Entry(chatboxframe, width=20, bg="grey10", fg="white")
 chatbox.pack(side=LEFT,expand=True,fill=BOTH)
@@ -694,6 +741,8 @@ def imgextract():
 
             cnt += 1
     #scrollFrame.pack(side="left")
+
+
 
 GuiLoop = threading.Thread(target=refresh, args=(1,), daemon=True)
 GuiLoop.start()
