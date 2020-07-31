@@ -14,7 +14,7 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.2.15"
+clientversion = "- 0.3a"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -441,6 +441,19 @@ def send(senddata):
     out = servboi + outline + "&id=" + addedout
     temp = requests.get(out)
 
+def sendcmd(senddata):
+    print("sendt")
+    try:
+        outline = senddata
+    except TypeError:
+        messagebox.showerror("Chat Noise Config Error", "You must have a username to send a message")
+    servboi = "http://" + server + port + "?cmd="
+    toadd = getid()
+    added1 = int(toadd)
+    added2 = added1 + 1
+    addedout = str(added2)
+    out = servboi + outline + "&id=" + addedout
+    temp = requests.get(out)
 
 def sendnbs(senddata):
     print("sendt")
@@ -466,8 +479,11 @@ def setupdate():
 def sendread(a):
     print("read")
     try:
-        bigboi = chatbox.get() + "\n"
-        send(bigboi)
+        bigboi = chatbox.get()
+        if bigboi[0] == "@":
+            sendcmd(bigboi)
+        else:
+            send(bigboi)
         chatbox.delete(0, END)
     except requests.exceptions.ConnectionError:
         tkinter.messagebox.showerror(title="NetError", message="Connection Error sending data to server")

@@ -5,7 +5,7 @@ from flask import Flask, request, redirect, send_file
 from werkzeug.utils import secure_filename
 import os
 import imghdr
-servversion = "S0.2.1"
+servversion = "S0.3a"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 ALLOWED_EXTENSIONS = set(['jpg', 'png', 'jpeg', 'gif','py','txt'])
@@ -94,6 +94,7 @@ def sync():
             print(outbound)
             send1(outbound)
 
+
 @app.route('/', methods=['GET'])
 def home():
     global messageid
@@ -109,6 +110,17 @@ def home():
             return "writen"
         else:
             return 'ID ERROR'
+    elif "cmd" in request.args:
+        if int(request.args['id']) > messageid:
+            chatlog = open("chatlog.txt", 'a')
+            message = request.args['cmd']
+            vermessage = message + '\n'
+            if message == "@boom":
+                chatlog.write("Reee\n")
+            chatlog.write(vermessage)
+            chatlog.close()
+            messageid += 1
+        return "cmd good"
 
     elif "get" in request.args:
         with open("chatlog.txt",'r') as fin:
