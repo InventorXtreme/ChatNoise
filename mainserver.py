@@ -37,7 +37,7 @@ def get_image(image_name):
         if image_name is not None:
             image_name = secure_filename(image_name)
             image = open(os.path.join(app.config['UPLOAD_PATH'], image_name))
-            god_christ_help = ".\image/" + image_name
+            god_christ_help = "image/" + image_name
             return send_file(god_christ_help)
         else:
             return 'error'

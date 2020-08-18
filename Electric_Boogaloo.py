@@ -1,4 +1,6 @@
 import requests
+from ctypes import windll
+windll.shcore.SetProcessDpiAwareness(1)
 import threading
 from tkinter import *
 import time
@@ -14,7 +16,7 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.3.2"
+clientversion = "- 0.3.3"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -25,13 +27,14 @@ from sframe import ScrollFrame, Example
 
 global user, server, port
 try:
-    config = pickle.load(open("config.p", "rb"))
+    config = pickle.load(open("files/config.p", "rb"))
     user = config["username"]
     server = config["server"]
     port = config["port"]
     print("config loaded")
     print(user)
 except:
+    os.mkdir("files")
     print("CONFIG ERROR: SETTING UP")
     namesetup = input("NAME: ")
     serversetup = input("IP: ")
@@ -41,8 +44,8 @@ except:
     config["server"] = serversetup
     config["port"] = portsetup
     config["username"] = namesetup
-    pickle.dump(config, open("config.p", "wb+"))
-    config = pickle.load(open("config.p", "rb"))
+    pickle.dump(config, open("files/config.p", "wb+"))
+    config = pickle.load(open("files/config.p", "rb"))
     user = config["username"]
     server = config["server"]
     port = config["port"]
@@ -95,12 +98,12 @@ def changename():
     global user, server, port
     print("CONFIG NAME SETTUP STARTED")
     namesetup = simpledialog.askstring("Chat Noise -> Settings -> Username", "Input New Username:")
-    config = pickle.load(open("config.p", "rb"))
+    config = pickle.load(open("files/config.p", "rb"))
 
     config["username"] = namesetup
 
-    pickle.dump(config, open("config.p", "wb+"))
-    config = pickle.load(open("config.p", "rb"))
+    pickle.dump(config, open("files/config.p", "wb+"))
+    config = pickle.load(open("files/config.p", "rb"))
     user = config["username"]
     server = config["server"]
     port = config["port"]
@@ -112,12 +115,12 @@ def changeserver():
     global user, server, port
     print("CONFIG NAME SETTUP STARTED")
     namesetup = simpledialog.askstring("Chat Noise -> Settings -> Server", "Input New Server:")
-    config = pickle.load(open("config.p", "rb"))
+    config = pickle.load(open("files/config.p", "rb"))
 
     config["server"] = namesetup
 
-    pickle.dump(config, open("config.p", "wb+"))
-    config = pickle.load(open("config.p", "rb"))
+    pickle.dump(config, open("files/config.p", "wb+"))
+    config = pickle.load(open("files/config.p", "rb"))
     user = config["username"]
     server = config["server"]
     port = config["port"]
@@ -130,12 +133,12 @@ def changeport():
     print("CONFIG NAME SETTUP STARTED")
 
     namesetup = simpledialog.askstring("Chat Noise -> Settings -> Port", "Input New Port:")
-    config = pickle.load(open("config.p", "rb"))
+    config = pickle.load(open("files/config.p", "rb"))
 
     config["port"] = ":" + namesetup
 
-    pickle.dump(config, open("config.p", "wb+"))
-    config = pickle.load(open("config.p", "rb"))
+    pickle.dump(config, open("files/config.p", "wb+"))
+    config = pickle.load(open("files/config.p", "rb"))
     user = config["username"]
     server = config["server"]
     port = config["port"]
@@ -637,12 +640,13 @@ root.bind('<Return>', sendread)
 chatboxframe = Frame(m, bg="grey10")
 chatboxframe.pack(side="left",expand=True,fill=BOTH)
 m.add(chatboxframe)
-text = CustomText(chatboxframe, bg="grey10", fg="white")
+text = CustomText(chatboxframe, bg="grey10", fg="white",font = ('Biome', 13))
 text.pack(expand=True,fill=BOTH)
-chatbox = Entry(chatboxframe, width=20, bg="grey10", fg="white")
+chatbox = Entry(chatboxframe, width=20, bg="grey10", fg="white",font = ('Biome', 13))
 chatbox.pack(side=LEFT,expand=True,fill=BOTH)
 sendb = Button(chatboxframe, command=sendreadb, text="send", bg="grey10", fg="red3",height=1,width=7)
 sendb.pack(side=RIGHT)
+
 
 menubar = Menu(root)
 
@@ -663,11 +667,8 @@ def imglistpopup_caller():
     imgpopup = tkinter.Toplevel(root)
     imglistpopup()
 
-
 codemenu.add_command(label="Upload", command=uploadimage)
-codemenu.add_command(label="Open", command=loadimage)
 codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
-codemenu.add_command(label="Open Image List", command=imglistpopup_caller)
 codemenu.add_command(label="Add Image to Image List", command=img_sause)
 
 FileMenu = Menu(menubar)
