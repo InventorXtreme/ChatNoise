@@ -16,7 +16,7 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.4"
+clientversion = "- 0.41"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -702,7 +702,7 @@ else:
         messagebox.showinfo("Downloading Update...","Downloading Update...")
         urllib.request.urlretrieve(url, "setup.exe")
         messagebox.showwarning("Installing update", "The program will close after the installation,to finish the install, please reopen it")
-        os.system("setup.exe")
+        os.startfile("setup.exe")
         root.destroy()
 def get_data():
     print("display")
