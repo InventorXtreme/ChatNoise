@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 import os
 import imghdr
 import sys
-servversion = "S0.3a"
+servversion = "S0.4"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 ALLOWED_EXTENSIONS = set(['jpg', 'png', 'jpeg', 'gif','py','txt'])

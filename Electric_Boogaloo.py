@@ -16,9 +16,10 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.3.3"
+clientversion = "- 0.4"
 import urllib.request
 from PIL import Image, ImageTk
+
 
 root = Tk()
 m = PanedWindow(root,orient=HORIZONTAL)
@@ -683,7 +684,26 @@ menubar.add_cascade(label="Encode/Decode Images", menu=codemenu)
 menubar.add_cascade(label="Settings", menu=settingsmenu)
 root.config(menu=menubar)
 
-
+urllib.request.urlretrieve("https://raw.githubusercontent.com/InventorXtreme/ChatNoise/master/version", "version")
+versionfile = open("version","r+")
+content = versionfile.read()
+if content == clientversion:
+    print("No Updates")
+else:
+    versionmenu = messagebox.askquestion(title="Electic Boogaloo Update", message="Update found!\n"
+                                                                               "Your Version :" + clientversion + "\n"
+                                                                               "New Version: "+ content + "\n"
+                                                                                                          "Update to new version?")
+    if versionmenu == "yes":
+        download_folder = os.path.expanduser("~") + "/Downloads/"
+        snip = content[2:]
+        url = "https://github.com/InventorXtreme/ChatNoise/releases/download/"+snip + "/setup.exe"
+        print(url)
+        messagebox.showinfo("Downloading Update...","Downloading Update...")
+        urllib.request.urlretrieve(url, "setup.exe")
+        messagebox.showwarning("Installing update", "The program will close after the installation,to finish the install, please reopen it")
+        os.system("setup.exe")
+        root.destroy()
 def get_data():
     print("display")
     iservboi = "http://" + server + port + "?get"
