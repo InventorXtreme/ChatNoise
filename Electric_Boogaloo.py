@@ -17,7 +17,7 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.4.8"
+clientversion = "- 0.5"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -755,7 +755,7 @@ spacer2.pack(side='left')
 
 settingsmenudropdown = Label(mainbar,text='Settings',bg='gray10',fg='white')
 settingsmenudropdown.pack(side='left')
-settingsmenudropdown.bind("<Button-1>", do_code_popup)
+settingsmenudropdown.bind("<Button-1>", do_settings_popup)
 
 urllib.request.urlretrieve("https://raw.githubusercontent.com/InventorXtreme/ChatNoise/master/version", "version")
 versionfile = open("version","r+")
