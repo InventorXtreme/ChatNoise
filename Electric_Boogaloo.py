@@ -17,7 +17,7 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.5.3"
+clientversion = "- 0.5.4"
 import urllib.request
 from PIL import Image, ImageTk
 
