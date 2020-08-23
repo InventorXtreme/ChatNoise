@@ -9,7 +9,7 @@ import tkinter
 from tkinter import messagebox
 import tkinter as tk
 import imghdr
-import re
+import ctypes
 #import magic
 global updategood
 updategood = True
@@ -17,7 +17,7 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.5.1"
+clientversion = "- 0.5.2"
 import urllib.request
 from PIL import Image, ImageTk
 
@@ -760,6 +760,15 @@ settingsmenudropdown.bind("<Button-1>", do_settings_popup)
 urllib.request.urlretrieve("https://raw.githubusercontent.com/InventorXtreme/ChatNoise/master/version", "version")
 versionfile = open("version","r+")
 content = versionfile.read()
+
+
+is_adminp = ctypes.windll.shell32.IsUserAnAdmin()
+if is_adminp == 1:
+    is_admin = True
+else:
+    is_admin = False
+
+
 if content == clientversion:
     print("No Updates")
 else:
@@ -773,9 +782,15 @@ else:
         url = "https://github.com/InventorXtreme/ChatNoise/releases/download/"+snip + "/setup.exe"
         print(url)
         messagebox.showinfo("Downloading Update...","Downloading Update...")
-        urllib.request.urlretrieve(url, "setup.exe")
+        try:
+            urllib.request.urlretrieve(url, r"C:\temp\setup.exe")
+        except:
+            if is_admin == False:
+                messagebox.showerror("Admin Rights", "Admin rights are required to update this program,\n"
+                                                     "Please relaunch the program by right clicking on the desktop icon\n"
+                                                     "and selecting Run as Administrator and approving the request.")
         messagebox.showwarning("Installing update", "The program will close after the installation,to finish the install, please reopen it")
-        os.startfile("setup.exe")
+        os.startfile(r"C:\temp\setup.exe")
         root.destroy()
 def get_data():
     print("display")
