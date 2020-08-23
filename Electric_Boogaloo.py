@@ -7,6 +7,7 @@ import time
 import pickle
 import tkinter
 from tkinter import messagebox
+import tkinter as tk
 import imghdr
 import re
 #import magic
@@ -16,14 +17,12 @@ from tkinter import simpledialog
 import os
 import webbrowser
 
-clientversion = "- 0.41"
+clientversion = "- 0.4.8"
 import urllib.request
 from PIL import Image, ImageTk
 
 
-root = Tk()
-m = PanedWindow(root,orient=HORIZONTAL)
-m.pack(fill=BOTH, expand=1)
+
 from sframe import ScrollFrame, Example
 
 global user, server, port
@@ -558,6 +557,22 @@ def about():
 global imglistcount
 imglistcount = 0
 
+#Top Bar
+class TopBar(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent) # create a frame (self)
+        self.canvas = tk.Canvas(self, borderwidth=0, background="#ffffff")          #place canvas on self
+        self.viewPort = tk.Frame(self.canvas, background="#ffffff")                    #place a frame on the canvas, this frame will hold the child widgets
+        self.config(height=20,bg='gray10')
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))                 #whenever the size of the frame changes, alter the scroll region respectively.
+
+    def onCanvasConfigure(self, event):
+        '''Reset the canvas window to encompass inner frame when required'''
+        canvas_width = event.width
+        self.canvas.itemconfig(self.canvas_window, width = canvas_width)
+
 global keeplist
 keeplist = []
 def imglistpopup():
@@ -633,6 +648,15 @@ def img_sause():
     sendnbs(out)
 
 
+root = Tk()
+
+
+mainbar = TopBar(root)
+mainbar.pack(fill='x',side=TOP)
+#topframe defined
+
+m = PanedWindow(root,orient=HORIZONTAL)
+m.pack(fill=BOTH, expand=1)
 root.configure(background='grey10')
 Title = "Python Chat Noise Client " + clientversion
 root.title(Title)
@@ -649,18 +673,20 @@ sendb = Button(chatboxframe, command=sendreadb, text="send", bg="grey10", fg="re
 sendb.pack(side=RIGHT)
 
 
-menubar = Menu(root)
+#menubar = Menu(root)
 
-Plugs = Menu(root)
+#Plugs = Menu(root)
 
-settingsmenu = Menu(root)
+settingsmenu = Menu(root, background='gray10', foreground='white',
+               activebackground='#004c99', activeforeground='white')
 
 
 settingsmenu.add_command(label="Change Username", command=changename)
 settingsmenu.add_command(label="Change Server", command=changeserver)
 settingsmenu.add_command(label="Change Port", command=changeport)
 
-codemenu = Menu(root)
+codemenu = Menu(root, background='gray10', foreground='white',
+               activebackground='#004c99', activeforeground='white')
 
 
 def imglistpopup_caller():
@@ -672,17 +698,64 @@ codemenu.add_command(label="Upload", command=uploadimage)
 codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
 codemenu.add_command(label="Add Image to Image List", command=img_sause)
 
-FileMenu = Menu(menubar)
+FileMenu = Menu(root, background='gray10', foreground='white',
+               activebackground='#004c99', activeforeground='white')
 
 # FileMenu.add_command(label="Settings",command=settings)
 
 FileMenu.add_command(label="Enable/Disable Refresh", command=setupdate)
 FileMenu.add_command(label="Send Clipboard", command=send_clip)
 FileMenu.add_command(label="About", command=about)
-menubar.add_cascade(label="File", menu=FileMenu)
-menubar.add_cascade(label="Encode/Decode Images", menu=codemenu)
-menubar.add_cascade(label="Settings", menu=settingsmenu)
-root.config(menu=menubar)
+
+#legacy menubar code
+# menubar.add_cascade(label="File", menu=FileMenu)
+# menubar.add_cascade(label="Encode/Decode Images", menu=codemenu)
+# menubar.add_cascade(label="Settings", menu=settingsmenu)
+#(menu=menubar)
+
+#Top Menubar code
+def do_file_popup(event):
+    # display the popup menu
+    try:
+        FileMenu.tk_popup(event.x_root, event.y_root+15, 0)
+    finally:
+        # make sure to release the grab (Tk 8.0a1 only)
+        FileMenu.grab_release()
+
+def do_code_popup(event):
+    # display the popup menu
+    try:
+        codemenu.tk_popup(event.x_root, event.y_root+15, 0)
+    finally:
+        # make sure to release the grab (Tk 8.0a1 only)
+        codemenu.grab_release()
+
+def do_settings_popup(event):
+    # display the popup menu
+    try:
+        settingsmenu.tk_popup(event.x_root, event.y_root+15, 0)
+    finally:
+        # make sure to release the grab (Tk 8.0a1 only)
+        settingsmenu.grab_release()
+
+#File Dropdown
+FileDropdown = Label(mainbar,text="File",bg="gray10",fg='white')
+FileDropdown.pack(side="left")
+FileDropdown.bind("<Button-1>", do_file_popup)
+
+spacer1 = Label(mainbar,text="  ",bg="gray10")
+spacer1.pack(side='left')
+
+CodemenuDropdown = Label(mainbar,text='Images',bg='gray10',fg='white')
+CodemenuDropdown.pack(side='left')
+CodemenuDropdown.bind("<Button-1>", do_code_popup)
+
+spacer2 = Label(mainbar,text="  ",bg="gray10")
+spacer2.pack(side='left')
+
+settingsmenudropdown = Label(mainbar,text='Settings',bg='gray10',fg='white')
+settingsmenudropdown.pack(side='left')
+settingsmenudropdown.bind("<Button-1>", do_code_popup)
 
 urllib.request.urlretrieve("https://raw.githubusercontent.com/InventorXtreme/ChatNoise/master/version", "version")
 versionfile = open("version","r+")
