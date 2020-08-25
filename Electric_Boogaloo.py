@@ -16,7 +16,7 @@ updategood = True
 from tkinter import simpledialog
 import os
 import webbrowser
-
+#use git pull to update repo
 clientversion = "- 0.5.4"
 import urllib.request
 from PIL import Image, ImageTk
