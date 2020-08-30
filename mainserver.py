@@ -31,6 +31,12 @@ def allowed_file(_file):
 def version():
     return servversion
 
+
+@app.route("/user/idget")
+def isidgood():
+    return
+
+
 @app.route('/image/<image_name>', methods=['GET'])
 def get_image(image_name):
     try:
