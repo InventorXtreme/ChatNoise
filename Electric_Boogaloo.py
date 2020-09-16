@@ -1,6 +1,5 @@
 import requests
 from ctypes import windll
-windll.shcore.SetProcessDpiAwareness(1)
 import threading
 from tkinter import *
 import time
@@ -10,20 +9,22 @@ from tkinter import messagebox
 import tkinter as tk
 import imghdr
 import ctypes
-#import magic
-global updategood
-updategood = True
 from tkinter import simpledialog
 import os
 import webbrowser
-#use git pull to update repo
-clientversion = "- 0.5.4"
 import urllib.request
 from PIL import Image, ImageTk
+windll.shcore.SetProcessDpiAwareness(1)
+
+#use git pull to update repo
+clientversion = "- 0.5.4"
+from sframe import ScrollFrame
+
+#import magic
+global updategood
+updategood = True
 
 
-
-from sframe import ScrollFrame, Example
 
 global user, server, port
 try:
@@ -554,8 +555,10 @@ def about():
                                                                                    " using Tkinter GUI\n"
                                                                                    "Server Version: " + serverversion)
 
+
 global imglistcount
 imglistcount = 0
+
 
 #Top Bar
 class TopBar(tk.Frame):
@@ -614,6 +617,8 @@ def refresh(h):
 
         if updategood != False:
             x = get_data()
+            #replace with a line list
+            #interperet and insert
             if ref_count % 5 == 0:
                 try:
                     imglistpopup()
