@@ -3,6 +3,7 @@ from ctypes import windll
 import threading
 from tkinter import *
 import time
+import copy
 import pickle
 import tkinter
 from tkinter import messagebox
@@ -414,6 +415,7 @@ def loadimagelist(img):
             label.bind("<Button-1>",lambda boi: openinpreview(img))
             label.pack(side=TOP)
             return label
+
         else:
             label = AnimatedGIF(scrollFrame.viewPort, "./cimg/cashedimage")
             label.bind("<Button-1>", lambda boi: openinpreview(img))
@@ -559,6 +561,41 @@ def about():
 global imglistcount
 imglistcount = 0
 
+class HyperlinkManager:
+
+    def __init__(self, text):
+
+        self.text = text
+
+        self.text.tag_config("hyper", foreground="blue", underline=1)
+
+        self.text.tag_bind("hyper", "<Enter>", self._enter)
+        self.text.tag_bind("hyper", "<Leave>", self._leave)
+        self.text.tag_bind("hyper", "<Button-1>", self._click)
+
+        self.reset()
+
+    def reset(self):
+        self.links = {}
+
+    def add(self, action):
+        # add an action to the manager.  returns tags to use in
+        # associated text widget
+        tag = "hyper-%d" % len(self.links)
+        self.links[tag] = action
+        return "hyper", tag
+
+    def _enter(self, event):
+        self.text.config(cursor="hand2")
+
+    def _leave(self, event):
+        self.text.config(cursor="")
+
+    def _click(self, event):
+        for tag in self.text.tag_names(CURRENT):
+            if tag[:6] == "hyper-":
+                runweb(self.links[tag])
+                return
 
 #Top Bar
 class TopBar(tk.Frame):
@@ -604,7 +641,9 @@ ref_count = 0
 global textlabellist
 textlabellist = {}
 
-
+def runweb(test):
+    print(test)
+    webbrowser.open(test,new=2)
 def refresh(h):
     global textlabellist
     global ref_count
@@ -617,6 +656,8 @@ def refresh(h):
 
         if updategood != False:
             x = get_data()
+
+            lines = get_lines()
             #replace with a line list
             #interperet and insert
             if ref_count % 5 == 0:
@@ -625,9 +666,49 @@ def refresh(h):
                     imgextract()
                 except tkinter.TclError:
                     pass
+            linenum = 0
+            linenumimage = len(lines) + 1
+
+            # text.delete('1.0',END)
             text.delete('1.0', END)
             text.insert(END, x)
             text.see(END)
+            imgtextcount = 1
+            lineiddict = {}
+            numused = 0
+            linuse = 0
+            for i in lines:
+                linenum = linenum+1
+                if i[0] == "|" and i[1] == "l":
+                    print("yea")
+                    linematch = str(linenum+linuse)
+                    linuse = linuse + 1
+                    linegood = linematch + '.0'
+                    linegood2 = linematch + '.1000'
+                    text.delete(linegood,linegood2)
+                    lineiddict[linegood] = i[6:]
+                    outstring = i[6:]
+                    outstring.replace('\n ','').replace('\r','')
+                    text.insert(linegood,outstring,hyperlink.add(i[6:]))
+                    text.see(END)
+                    print(linegood)
+            for i in reversed(lines):
+                linenumimage -= 1
+                if i[0] == "i" and i[1] == "m" and i[2]=="g" and i[3] == "|" and imgtextcount != 6:
+                    print("yea")
+                    linematch = str(linenumimage)
+                    linegood = linematch + '.0'
+                    linegood2 = linematch + '.1000'
+                    text.delete(linegood, linegood2)
+                    #text.insert(linegood, i[6:], hyperlink.add(lambda: runweb(i[6:])))
+                    text.see(END)
+                    print(linegood)
+                    #print(img_data_dict)
+
+                    text.image_create(linegood, image=img_data_dict[imgtextcount])
+                    imgtextcount += 1
+
+
             # compiled = x.split("\n")
             # ready = compiled[-9:]
             # cnt = 0
@@ -672,6 +753,7 @@ chatboxframe.pack(side="left",expand=True,fill=BOTH)
 m.add(chatboxframe)
 text = CustomText(chatboxframe, bg="grey10", fg="white",font = ('Biome', 13))
 text.pack(expand=True,fill=BOTH)
+hyperlink = HyperlinkManager(text)
 chatbox = Entry(chatboxframe, width=20, bg="grey10", fg="white",font = ('Biome', 13))
 chatbox.pack(side=LEFT,expand=True,fill=BOTH)
 sendb = Button(chatboxframe, command=sendreadb, text="send", bg="grey10", fg="red3",height=1,width=7)
@@ -698,10 +780,14 @@ def imglistpopup_caller():
     global imgpopup
     imgpopup = tkinter.Toplevel(root)
     imglistpopup()
-
+def send_link():
+    base64_img = simpledialog.askstring("Chat Noise -> Link", "Input link to send")
+    out = "|link|" + base64_img
+    sendnbs(out)
 codemenu.add_command(label="Upload", command=uploadimage)
 codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
-codemenu.add_command(label="Add Image to Image List", command=img_sause)
+codemenu.add_command(label="Post Image", command=img_sause)
+codemenu.add_command(label="Send Link", command=send_link)
 
 FileMenu = Menu(root, background='gray10', foreground='white',
                activebackground='#004c99', activeforeground='white')
@@ -813,6 +899,18 @@ def get_data():
     with open("chatlogclient.txt", 'r') as fin:
         return fin.read()
 
+def get_lines():
+    print("display")
+    iservboi = "http://" + server + port + "?get"
+    try:
+        down = requests.get(iservboi)
+    except requests.exceptions.ConnectionError:
+        return "Error Connecting to server"
+    x = down.text
+    with open("chatlogclient.txt", "w+") as file:
+        file.write(x)
+    with open("chatlogclient.txt", 'r') as fin:
+        return fin.readlines()
 
 global img_list
 img_list = {}
@@ -852,6 +950,7 @@ def imgextract():
 
             command = line.split("|")
             if command[0] == "img" and cntimg < 5:
+                #come back
                 img_list[command[1]] = loadimagelist(command[1])
                 img_names.append(command[1])
                 cntimg += 1
