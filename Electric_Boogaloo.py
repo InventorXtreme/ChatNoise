@@ -3,7 +3,6 @@ from ctypes import windll
 import threading
 from tkinter import *
 import time
-import copy
 import pickle
 import tkinter
 from tkinter import messagebox
@@ -18,7 +17,7 @@ from PIL import Image, ImageTk
 windll.shcore.SetProcessDpiAwareness(1)
 
 #use git pull to update repo
-clientversion = "- 0.5.4"
+clientversion = "- 0.9.0"
 from sframe import ScrollFrame
 
 #import magic
@@ -381,6 +380,8 @@ def openinpreview(base64_img):
 global img_data_dict
 img_data_dict = {}
 
+global img_dict
+img_dict = {}
 #global imgpopup
 #imgpopup = tkinter.Toplevel(root)
 #imgpopup.title("5 most recent images")
@@ -398,45 +399,47 @@ def loadimagelist(img):
     global scrollFrame
     global img_data_dict
     global imgpopup
+    global img_dict
     print("loaded")
     loadimagelist_count += 1
     # base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
     url = "http://" + server + port + "/image/" + img
     # webbrowser.open(url,new=2)
 
+
     try:
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         imgd = Image.open("./cimg/cashedimage")
-        img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
+        img_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
         #print(magic.from_file('./cimg/cashedimage', mime=True))
         filetype = imghdr.what("./cimg/cashedimage", h=None)
         if filetype != "gif":
-            label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
-            label.bind("<Button-1>",lambda boi: openinpreview(img))
-            label.pack(side=TOP)
-            return label
+            img_data_dict[loadimagelist_count] = Label(text, image=img_dict[loadimagelist_count])
+            img_data_dict[loadimagelist_count].bind("<Button-1>",lambda boi: openinpreview(img))
+            #img_data_dict[loadimagelist_count].pack(side=TOP)
+            #return label
 
         else:
-            label = AnimatedGIF(scrollFrame.viewPort, "./cimg/cashedimage")
-            label.bind("<Button-1>", lambda boi: openinpreview(img))
-            label.pack(side=TOP)
+            img_data_dict[loadimagelist_count] = AnimatedGIF(text, "./cimg/cashedimage")
+            img_data_dict[loadimagelist_count].bind("<Button-1>", lambda boi: openinpreview(img))
+            #img_data_dict[loadimagelist_count].pack(side=TOP)
 
     except FileNotFoundError:
         os.mkdir("cimg")
         urllib.request.urlretrieve(url, "./cimg/cashedimage")
         imgd = Image.open("./cimg/cashedimage")
-        img_data_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
+        img_dict[loadimagelist_count] = ImageTk.PhotoImage(imgd)
         #print(magic.from_file('./cimg/cashedimage', mime=True))
         filetype = imghdr.what("./cimg/cashedimage", h=None)
         if filetype != "gif":
-            label = Label(scrollFrame.viewPort, image=img_data_dict[loadimagelist_count])
-            label.bind("<Button-1>", lambda boi: openinpreview(img))
-            label.pack(side=TOP)
-            return label
+            img_data_dict[loadimagelist_count] = Label(text, image=img_dict[loadimagelist_count])
+            img_data_dict[loadimagelist_count].bind("<Button-1>", lambda boi: openinpreview(img))
+            #img_data_dict[loadimagelist_count].pack(side=TOP)
+            #return label
         else:
-            label = AnimatedGIF(scrollFrame.viewPort, "./cimg/cashedimage")
-            label.bind("<Button-1>", lambda boi: openinpreview(img))
-            label.pack(side=TOP)
+            img_data_dict[loadimagelist_count] = AnimatedGIF(text, "./cimg/cashedimage")
+            img_data_dict[loadimagelist_count].bind("<Button-1>", lambda boi: openinpreview(img))
+            #label.pack(side=TOP)
 
 
 def uploadimage():
@@ -641,23 +644,39 @@ ref_count = 0
 global textlabellist
 textlabellist = {}
 
+global old_mid
+global new_mid
+old_mid = -1
+new_mid = getid()
+global isfirst
+isfirst = True
 def runweb(test):
     print(test)
     webbrowser.open(test,new=2)
 def refresh(h):
+    global new_mid
+    global old_mid
     global textlabellist
     global ref_count
+    global isfirst
     print("refeshed")
     while True:
+        if isfirst != True:
+            old_mid = new_mid
+            new_mid = getid()
+
 
         # for boom in textlabellist:
         #         textlabellist[boom].destroy()
         #         print("ew")
 
-        if updategood != False:
+
+        if updategood != False and new_mid != old_mid:
+            isfirst = False
             x = get_data()
 
             lines = get_lines()
+            print(lines)
             #replace with a line list
             #interperet and insert
             if ref_count % 5 == 0:
@@ -667,16 +686,20 @@ def refresh(h):
                 except tkinter.TclError:
                     pass
             linenum = 0
-            linenumimage = len(lines) + 1
+            linenumimage = len(lines)
 
             # text.delete('1.0',END)
             text.delete('1.0', END)
             text.insert(END, x)
             text.see(END)
-            imgtextcount = 1
+
             lineiddict = {}
             numused = 0
             linuse = 0
+            res = list(img_data_dict.keys())[0]
+            imgtextcount = int(res)
+            imgtextcountend = int(res)+5
+            print(img_data_dict)
             for i in lines:
                 linenum = linenum+1
                 if i[0] == "|" and i[1] == "l":
@@ -694,18 +717,22 @@ def refresh(h):
                     print(linegood)
             for i in reversed(lines):
                 linenumimage -= 1
-                if i[0] == "i" and i[1] == "m" and i[2]=="g" and i[3] == "|" and imgtextcount != 6:
+                if i[0] == "i" and i[1] == "m" and i[2]=="g" and i[3] == "|" and imgtextcount != imgtextcountend:
                     print("yea")
-                    linematch = str(linenumimage)
+                    linematch = str(linenumimage+2)
                     linegood = linematch + '.0'
                     linegood2 = linematch + '.1000'
-                    text.delete(linegood, linegood2)
+                    #text.delete(linegood, linegood2)
                     #text.insert(linegood, i[6:], hyperlink.add(lambda: runweb(i[6:])))
                     text.see(END)
                     print(linegood)
                     #print(img_data_dict)
-
-                    text.image_create(linegood, image=img_data_dict[imgtextcount])
+                    print(imgtextcount)
+                    print(i)
+                    #try:
+                        #text.image_create(linegood, image=img_data_dict[imgtextcount])
+                    #except:
+                    text.window_create(linegood, window=img_data_dict[imgtextcount])
                     imgtextcount += 1
 
 
@@ -726,6 +753,9 @@ def refresh(h):
             text.highlight_pattern("-.*:", "red", regexp=True,start="end-25l")
             text.highlight_pattern(r"\(DEV\)", "blue", regexp=True,start="end-10l")
             time.sleep(3)
+        else:
+            ref_count = 5
+            time.sleep(3)
 
 
 def img_sause():
@@ -740,8 +770,9 @@ root = Tk()
 mainbar = TopBar(root)
 mainbar.pack(fill='x',side=TOP)
 #topframe defined
+#m = PanedWindow(root,orient=HORIZONTAL)
 
-m = PanedWindow(root,orient=HORIZONTAL)
+m = Frame(root)
 m.pack(fill=BOTH, expand=1)
 root.configure(background='grey10')
 Title = "Python Chat Noise Client " + clientversion
@@ -750,7 +781,7 @@ root.bind('<Return>', sendread)
 
 chatboxframe = Frame(m, bg="grey10")
 chatboxframe.pack(side="left",expand=True,fill=BOTH)
-m.add(chatboxframe)
+#m.add(chatboxframe)
 text = CustomText(chatboxframe, bg="grey10", fg="white",font = ('Biome', 13))
 text.pack(expand=True,fill=BOTH)
 hyperlink = HyperlinkManager(text)
@@ -900,7 +931,7 @@ def get_data():
         return fin.read()
 
 def get_lines():
-    print("display")
+    print("display Lines")
     iservboi = "http://" + server + port + "?get"
     try:
         down = requests.get(iservboi)
@@ -916,14 +947,15 @@ global img_list
 img_list = {}
 scrollFrame = ScrollFrame(root)
 scrollFrame.viewPort.config(bg="grey10")
-scrollFrame.pack(side="left",expand=True,fill=BOTH)
-m.add(scrollFrame)
+#scrollFrame.pack(side="left",expand=True,fill=BOTH)
+#m.add(scrollFrame)
 def imgextract():
     #imglistpopup()
     global img_list
     global img_names
     global imgpopup
     global scrollFrame
+    global img_data_dict
     img_list.clear()
     cnt = 1
     cntimg = 0
@@ -940,6 +972,8 @@ def imgextract():
         filestring = fin.read()
         linelist = filestring.split("\n")
         linelist.reverse()
+        img_data_dict = {}
+        img_dict = {}
 
         while True:
             goto = False
