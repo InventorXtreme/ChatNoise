@@ -18,13 +18,14 @@ from elevate import elevate
 windll.shcore.SetProcessDpiAwareness(1)
 
 #use git pull to update repo
-clientversion = "- 0.9.3"
+clientversion = "- 0.9.4"
 from sframe import ScrollFrame
 
 #import magic
 global updategood
 updategood = True
 elevate()
+#elevate(show_console=False)
 
 
 global user, server, port
@@ -918,14 +919,14 @@ else:
             messagebox.showerror("Admin Rights", "Admin rights are required to update this program,\n"
                                                  "Please relaunch the program by right clicking on the desktop icon\n"
                                                  "and selecting Run as Administrator and approving the request.")
-            root.destroy()
+            root.quit()
 
         urllib.request.urlretrieve(url, r"C:\temp\setup.exe")
         messagebox.showinfo("Update", "Please press OK to install the update")
         #messagebox.showwarning("Installing update",
         #                       "The program will close after the installation,to finish the install, please reopen it")
         os.startfile(r"C:\temp\setup.exe")
-        root.destroy()
+        exit()
 
 
 def get_data():
