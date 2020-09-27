@@ -14,16 +14,17 @@ import os
 import webbrowser
 import urllib.request
 from PIL import Image, ImageTk
+from elevate import elevate
 windll.shcore.SetProcessDpiAwareness(1)
 
 #use git pull to update repo
-clientversion = "- 0.9.0"
+clientversion = "- 0.9.3"
 from sframe import ScrollFrame
 
 #import magic
 global updategood
 updategood = True
-
+elevate()
 
 
 global user, server, port
@@ -421,6 +422,7 @@ def loadimagelist(img):
 
         else:
             img_data_dict[loadimagelist_count] = AnimatedGIF(text, "./cimg/cashedimage")
+            img_data_dict[loadimagelist_count].start_animation()
             img_data_dict[loadimagelist_count].bind("<Button-1>", lambda boi: openinpreview(img))
             #img_data_dict[loadimagelist_count].pack(side=TOP)
 
@@ -438,6 +440,7 @@ def loadimagelist(img):
             #return label
         else:
             img_data_dict[loadimagelist_count] = AnimatedGIF(text, "./cimg/cashedimage")
+            img_data_dict[loadimagelist_count].start_animation()
             img_data_dict[loadimagelist_count].bind("<Button-1>", lambda boi: openinpreview(img))
             #label.pack(side=TOP)
 
@@ -679,7 +682,7 @@ def refresh(h):
             print(lines)
             #replace with a line list
             #interperet and insert
-            if ref_count % 5 == 0:
+            if ref_count == ref_count:
                 try:
                     imglistpopup()
                     imgextract()
@@ -708,18 +711,21 @@ def refresh(h):
                     linuse = linuse + 1
                     linegood = linematch + '.0'
                     linegood2 = linematch + '.1000'
-                    text.delete(linegood,linegood2)
+
                     lineiddict[linegood] = i[6:]
-                    outstring = i[6:]
-                    outstring.replace('\n ','').replace('\r','')
+                    outstring = i[6:-1]
+                    text.delete(linegood, linegood2)
+                    outstring.replace('\n ','f').replace('\r','f')
                     text.insert(linegood,outstring,hyperlink.add(i[6:]))
                     text.see(END)
                     print(linegood)
+                    linenum = linenum-1
+            lines = get_lines()
+
             for i in reversed(lines):
-                linenumimage -= 1
                 if i[0] == "i" and i[1] == "m" and i[2]=="g" and i[3] == "|" and imgtextcount != imgtextcountend:
                     print("yea")
-                    linematch = str(linenumimage+2)
+                    linematch = str(linenumimage)
                     linegood = linematch + '.0'
                     linegood2 = linematch + '.1000'
                     #text.delete(linegood, linegood2)
@@ -732,8 +738,12 @@ def refresh(h):
                     #try:
                         #text.image_create(linegood, image=img_data_dict[imgtextcount])
                     #except:
+
                     text.window_create(linegood, window=img_data_dict[imgtextcount])
                     imgtextcount += 1
+                linenumimage -= 1
+
+
 
 
             # compiled = x.split("\n")
@@ -868,7 +878,7 @@ FileDropdown.bind("<Button-1>", do_file_popup)
 spacer1 = Label(mainbar,text="  ",bg="gray10")
 spacer1.pack(side='left')
 
-CodemenuDropdown = Label(mainbar,text='Images',bg='gray10',fg='white')
+CodemenuDropdown = Label(mainbar,text='Special',bg='gray10',fg='white')
 CodemenuDropdown.pack(side='left')
 CodemenuDropdown.bind("<Button-1>", do_code_popup)
 
@@ -903,7 +913,7 @@ else:
         snip = content[2:]
         url = "https://github.com/InventorXtreme/ChatNoise/releases/download/"+snip + "/setup.exe"
         print(url)
-        messagebox.showinfo("Downloading Update...","Downloading Update...")
+        #messagebox.showinfo("Downloading Update...","Downloading Update...")
         if is_admin == False:
             messagebox.showerror("Admin Rights", "Admin rights are required to update this program,\n"
                                                  "Please relaunch the program by right clicking on the desktop icon\n"
@@ -911,8 +921,9 @@ else:
             root.destroy()
 
         urllib.request.urlretrieve(url, r"C:\temp\setup.exe")
-        messagebox.showwarning("Installing update",
-                               "The program will close after the installation,to finish the install, please reopen it")
+        messagebox.showinfo("Update", "Please press OK to install the update")
+        #messagebox.showwarning("Installing update",
+        #                       "The program will close after the installation,to finish the install, please reopen it")
         os.startfile(r"C:\temp\setup.exe")
         root.destroy()
 
