@@ -13,19 +13,19 @@ from tkinter import simpledialog
 import os
 import webbrowser
 import urllib.request
+from tkinter import filedialog
 from PIL import Image, ImageTk
 from elevate import elevate
-windll.shcore.SetProcessDpiAwareness(1)
 
+windll.shcore.SetProcessDpiAwareness(1)
+elevate()           #reeeee this makes me want to die
 #use git pull to update repo
-clientversion = "- 0.9.4"
+clientversion = "- 0.9.4" #Todo - change to 0.9.5
 from sframe import ScrollFrame
 
-#import magic
 global updategood
 updategood = True
-elevate()
-#elevate(show_console=False)
+
 
 
 global user, server, port
@@ -130,7 +130,18 @@ def changeserver():
     print("config loaded")
     print(user)
 
-
+def embedup():
+    print("embedup called")
+    filename = filedialog.askopenfilename(filetypes=(("Images", "*.jpg"),("Images","*.png"),("Images","*.jpeg"),("Images","*.gif")))
+    url = "http://" + server + port + "/upimage/"
+    try:
+        with open(filename,'rb') as filedata:
+            request = requests.post(url,files={'file':filedata})
+            outname = os.path.basename(filedata.name)
+            img_post(outname)
+    except:
+        print("embedup error")
+        pass
 def changeport():
     global user, server, port
     print("CONFIG NAME SETTUP STARTED")
@@ -253,31 +264,6 @@ class AnimatedGIF(Label, object):
 
         super(AnimatedGIF, self).place_forget(**kwargs)
 
-# def loadimage():
-#     print("loaded")
-#     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
-#     url = "http://" + server + port + "/image/" + base64_img
-#     # webbrowser.open(url,new=2)
-#
-#     try:
-#         urllib.request.urlretrieve(url, "./cimg/cashedimage")
-#         popup = tkinter.Toplevel(root)
-#         img = Image.open("./cimg/cashedimage")
-#         tatras = ImageTk.PhotoImage(img)
-#
-#         label = Label(popup, image=tatras)
-#         label.pack()
-#         popup.mainloop()
-#     except FileNotFoundError:
-#         os.mkdir("cimg")
-#         urllib.request.urlretrieve(url, "./cimg/cashedimage")
-#         popup = tkinter.Toplevel(root)
-#         img = Image.open("./cimg/cashedimage")
-#         tatras = ImageTk.PhotoImage(img)
-#
-#         label = Label(popup, image=tatras)
-#         label.pack()
-#         popup.mainloop()
 
 def loadimage():
     base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image Data to Decode")
@@ -332,7 +318,10 @@ class ResizeFrame(Frame):
         self.background.bind('<Configure>', self._resize_image)
 
     def _resize_image(self,event):
+        #TODO: SCALE IMAGE with ratio
 
+        #get scale factor for chosen width or hieght somehow
+        #Multiply other value by scale factor
         new_width = event.width -4
         new_height = event.height -4
 
@@ -479,8 +468,12 @@ def send_clip():
 
 def getid():
     servboi = "http://" + server + port + "/messageid/"
-    out = requests.get(servboi)
-    return out.text
+    try:
+        out = requests.get(servboi)
+        return out.text
+    except:
+        print("Server Connection Error")
+        return "Error Connecting to Server"
 
 
 def send(senddata):
@@ -657,7 +650,16 @@ isfirst = True
 def runweb(test):
     print(test)
     webbrowser.open(test,new=2)
+
+global manupdate
+manupdate = False
+
+def manupdatecall():
+    global manupdate
+    manupdate = True
+
 def refresh(h):
+    global manupdate
     global new_mid
     global old_mid
     global textlabellist
@@ -670,12 +672,15 @@ def refresh(h):
             new_mid = getid()
 
 
-        # for boom in textlabellist:
-        #         textlabellist[boom].destroy()
-        #         print("ew")
-
-
         if updategood != False and new_mid != old_mid:
+            updateif = True
+        if manupdate == True:
+            manupdate = False
+            updateif = True
+
+
+        if updateif == True:
+            updateif = False
             isfirst = False
             x = get_data()
 
@@ -744,17 +749,6 @@ def refresh(h):
                     imgtextcount += 1
                 linenumimage -= 1
 
-
-
-
-            # compiled = x.split("\n")
-            # ready = compiled[-9:]
-            # cnt = 0
-            # for b in ready:
-            #     ree = str(b)
-            #     textlabellist[cnt] = Label(root,text=ree)
-            #     textlabellist[cnt].pack()
-            #     cnt += 1
             ref_count += 1
             text.tag_configure("red", foreground="Red")
             text.tag_configure("blue",foreground="#00c0FF")
@@ -768,25 +762,20 @@ def refresh(h):
             ref_count = 5
             time.sleep(3)
 
-
-def img_sause():
-    base64_img = simpledialog.askstring("Chat Noise -> B64 Image Decoder", "Input Image to send")
-    out = "img|" + base64_img
+def img_post(filename):
+    out = "img|" + filename
     sendnbs(out)
-
 
 root = Tk()
 
 
 mainbar = TopBar(root)
 mainbar.pack(fill='x',side=TOP)
-#topframe defined
-#m = PanedWindow(root,orient=HORIZONTAL)
 
 m = Frame(root)
 m.pack(fill=BOTH, expand=1)
 root.configure(background='grey10')
-Title = "Python Chat Noise Client " + clientversion
+Title = "Electric Boogaloo Chat Noise Client " + clientversion
 root.title(Title)
 root.bind('<Return>', sendread)
 
@@ -798,6 +787,8 @@ text.pack(expand=True,fill=BOTH)
 hyperlink = HyperlinkManager(text)
 chatbox = Entry(chatboxframe, width=20, bg="grey10", fg="white",font = ('Biome', 13))
 chatbox.pack(side=LEFT,expand=True,fill=BOTH)
+chatbox.config(insertbackground="#FFFFFF")
+
 sendb = Button(chatboxframe, command=sendreadb, text="send", bg="grey10", fg="red3",height=1,width=7)
 sendb.pack(side=RIGHT)
 
@@ -807,7 +798,8 @@ sendb.pack(side=RIGHT)
 #Plugs = Menu(root)
 
 settingsmenu = Menu(root, background='gray10', foreground='white',
-               activebackground='#004c99', activeforeground='white')
+               activebackground='#004c99', activeforeground='white',
+                    tearoff=0)
 
 
 settingsmenu.add_command(label="Change Username", command=changename)
@@ -815,7 +807,9 @@ settingsmenu.add_command(label="Change Server", command=changeserver)
 settingsmenu.add_command(label="Change Port", command=changeport)
 
 codemenu = Menu(root, background='gray10', foreground='white',
-               activebackground='#004c99', activeforeground='white')
+               activebackground='#004c99', activeforeground='white',
+                tearoff=0)
+
 
 
 def imglistpopup_caller():
@@ -827,16 +821,18 @@ def send_link():
     out = "|link|" + base64_img
     sendnbs(out)
 codemenu.add_command(label="Upload", command=uploadimage)
+codemenu.add_command(label="Post Image",command=embedup)
 codemenu.add_command(label="Open in Browser", command=loadimagebrowser)
-codemenu.add_command(label="Post Image", command=img_sause)
+#codemenu.add_command(label="Post Image(Legacy)", command=img_sause)
 codemenu.add_command(label="Send Link", command=send_link)
 
 FileMenu = Menu(root, background='gray10', foreground='white',
-               activebackground='#004c99', activeforeground='white')
+               activebackground='#004c99', activeforeground='white',
+                tearoff=0)
 
 # FileMenu.add_command(label="Settings",command=settings)
 
-FileMenu.add_command(label="Enable/Disable Refresh", command=setupdate)
+FileMenu.add_command(label="Manual Refresh", command=manupdatecall)
 FileMenu.add_command(label="Send Clipboard", command=send_clip)
 FileMenu.add_command(label="About", command=about)
 
@@ -889,10 +885,13 @@ spacer2.pack(side='left')
 settingsmenudropdown = Label(mainbar,text='Settings',bg='gray10',fg='white')
 settingsmenudropdown.pack(side='left')
 settingsmenudropdown.bind("<Button-1>", do_settings_popup)
-
-urllib.request.urlretrieve("https://raw.githubusercontent.com/InventorXtreme/ChatNoise/master/version", "version")
-versionfile = open("version","r+")
-content = versionfile.read()
+try:
+    urllib.request.urlretrieve("https://raw.githubusercontent.com/InventorXtreme/ChatNoise/master/version", "version")
+    versionfile = open("version","r+")
+    content = versionfile.read()
+except:
+    print("versionerror")
+    content = clientversion
 
 
 is_adminp = ctypes.windll.shell32.IsUserAnAdmin()
