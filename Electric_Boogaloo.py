@@ -18,9 +18,9 @@ from PIL import Image, ImageTk
 from elevate import elevate
 
 windll.shcore.SetProcessDpiAwareness(1)
-elevate()           #reeeee this makes me want to die
+#elevate()           #reeeee this makes me want to die
 #use git pull to update repo
-clientversion = "- 0.9.4" #Todo - change to 0.9.5
+clientversion = "- 0.9.5" #Todo - change to 0.9.5
 from sframe import ScrollFrame
 
 global updategood
@@ -488,6 +488,7 @@ def send(senddata):
     added2 = added1 + 1
     addedout = str(added2)
     out = servboi + outline + "&id=" + addedout
+    print(out)
     temp = requests.get(out)
 
 def sendcmd(senddata):
@@ -921,7 +922,7 @@ else:
             root.quit()
 
         urllib.request.urlretrieve(url, r"C:\temp\setup.exe")
-        messagebox.showinfo("Update", "Please press OK to install the update")
+        #messagebox.showinfo("Update", "Please press OK to install the update")
         #messagebox.showwarning("Installing update",
         #                       "The program will close after the installation,to finish the install, please reopen it")
         os.startfile(r"C:\temp\setup.exe")

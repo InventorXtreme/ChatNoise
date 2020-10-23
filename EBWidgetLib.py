@@ -1,7 +1,44 @@
 import webbrowser
 from PIL import Image, ImageTk
 import tkinter as tk
+import urllib
+import requests
+import imghdr
+#Todo make a status bar that can be placed at the bottom of the root window to show progress of image loading
+#Todo: Make a scrollbar on text widget
 
+class ImageChatFrame(tk.Frame):
+    def __init__(self,parent,imgfilename,server,port,*args,**kwargs):
+        tk.Frame.__init__(self,parent,*args,**kwargs)
+        self.filename = imgfilename
+        self.server = server
+        self.port = port
+        self.parent = parent
+        self.url = self.server + ":" + self.port + "/image/" + self.filename
+        urllib.request.urlretrieve(self.url, "./cimg/cashedimage")
+        self.imgd = Image.open("./cimg/cashedimage")
+        self.tkimg = ImageTk.PhotoImage(self.imgd)
+        self.filetype = imghdr.what("./cimg/cashedimage", h=None)
+        if self.filetype != "gif":
+            self.widget = tk.Label(self, image=self.tkimg)
+            self.widget.pack()
+        else:
+            self.widget = AnimatedGIF(self,"./cimg/cashedimage")
+            self.widget.start_animation()
+            self.widget.pack()
+
+
+
+
+
+
+
+def getid(server,port):
+    idurl = server + ":" + port + "/messageid/"
+    x = requests.get(idurl)
+    res = x.text
+    out = res
+    return out
 class HyperlinkManager:
     def __init__(self, text):
 
@@ -89,7 +126,10 @@ class AnimatedGIF(tk.Label, object):
 
     def _animate_GIF(self):
         self._loc += 1
-        self.configure(image=self._frames[self._loc])
+        try:
+            self.configure(image=self._frames[self._loc])
+        except:
+            pass
 
         if self._loc == self._last_index:
             if self._forever:
@@ -181,7 +221,6 @@ class CustomText(tk.Text):
         count = tk.IntVar()
         indexlist = []
         while True:
-
             index = self.search(pattern, "matchEnd","searchLimit",
                                 count=count, regexp=regexp)
             if index == "": break
