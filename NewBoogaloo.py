@@ -35,15 +35,15 @@ class TextInputBlock(tk.Frame):
         self.serverurl =  self.server + ":" + self.port + "/upimage/"
         self.filename = filedialog.askopenfilename(
             filetypes=(("Images", "*.jpg"), ("Images", "*.png"), ("Images", "*.jpeg"), ("Images", "*.gif")))
-        #try:
-        with open(self.filename, 'rb') as filedata:
-            self.imgrequest = requests.post(self.serverurl, files={'file': filedata})
-            self.outname = os.path.basename(filedata.name)
-            self.imageurl = self.server + ":" + self.port + "?send=" + "img|" + self.outname + "&id=" + self.getid()
-            self.outimgrequest = requests.get(url=self.imageurl)
-        #except:
-        #    print("embedup error")
-        #    pass
+        try:
+            with open(self.filename, 'rb') as filedata:
+                self.imgrequest = requests.post(self.serverurl, files={'file': filedata})
+                self.outname = os.path.basename(filedata.name)
+                self.imageurl = self.server + ":" + self.port + "?send=" + "img|" + self.outname + "&id=" + self.getid()
+                self.outimgrequest = requests.get(url=self.imageurl)
+        except:
+            print("EmbedUp error")
+            pass
     def getid(self):
         self.res = EBLib.getid(self.server,self.port)
         self.out = str(int(self.res) + 1)
