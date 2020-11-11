@@ -8,6 +8,9 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 from tkinter import ttk
 from elevate import elevate
+from tkinter import filedialog
+import os
+
 #elevate()
 class TextInputBlock(tk.Frame):
     def __init__(self,parent,server,port,username,font,*args,**kwargs):
@@ -28,6 +31,19 @@ class TextInputBlock(tk.Frame):
         print(self.url)
         print(outboundrequest)
         self.chatbox.delete(0,tk.END)
+    def sendimage(self,*args):
+        self.serverurl =  self.server + ":" + self.port + "/upimage/"
+        self.filename = filedialog.askopenfilename(
+            filetypes=(("Images", "*.jpg"), ("Images", "*.png"), ("Images", "*.jpeg"), ("Images", "*.gif")))
+        #try:
+        with open(self.filename, 'rb') as filedata:
+            self.imgrequest = requests.post(self.serverurl, files={'file': filedata})
+            self.outname = os.path.basename(filedata.name)
+            self.imageurl = self.server + ":" + self.port + "?send=" + "img|" + self.outname + "&id=" + self.getid()
+            self.outimgrequest = requests.get(url=self.imageurl)
+        #except:
+        #    print("embedup error")
+        #    pass
     def getid(self):
         self.res = EBLib.getid(self.server,self.port)
         self.out = str(int(self.res) + 1)
@@ -91,7 +107,7 @@ class ChatReadOut(tk.Frame):
             #print(self.linenum)
             try:
                 if self.currentline[0] == "i" and self.currentline[1] =="m" and self.currentline[2] =="g" and self.currentline[3] == "|":
-                    if self.imgcount != 5:
+                    if self.imgcount != self.imageback:
                         self.imglist[self.linenum] = self.currentline[4:]
                         self.imgcount += 1
                 if self.currentline[0] == "|" and self.currentline[1] == "l":
@@ -127,18 +143,20 @@ class ChatReadOut(tk.Frame):
         for self.imgrender in self.imglist:
             topbar.pro.pack(side=tk.RIGHT)
             self.imagenum += 1
+            self.icment = 100 / self.imageback
+            self.icment = self.icment / 2
             #TODO Make each image load individualy from eachother
 
             #self.textbox.see(tk.END)
             self.prepstring = str(self.imgrender) + ".0"
-            topbar.pro.step(10)
+            topbar.pro.step(self.icment)
             topbar.statuschange("Loading Image " + str(self.imagenum) +  "/" +str(self.imageback) + "   ")
 
             self.imgdata[self.imgrender] = EBLib.ImageChatFrame(self.textbox,self.imglist[self.imgrender],self.server,self.port)
             self.textbox.window_create(self.prepstring, window=self.imgdata[self.imgrender])
             print(self.imgrender,self.imglist[self.imgrender])
             self.textbox.see(tk.END)
-            topbar.pro.step(10)
+            topbar.pro.step(self.icment)
             if self.imagenum == self.imageback:
                 topbar.statuschange("Ready   ")
                 topbar.pro.pack_forget()
@@ -189,6 +207,17 @@ class MenuAdd(tk.Frame):
 
         self.FileDrop.pack(side=tk.LEFT)
         self.FileDrop.bind("<Button-1>",self.do_file_popup)
+        self.spacer = tk.Label(self.statbar, text="    ", bg="gray10")
+        self.spacer.pack(side=tk.RIGHT)
+        self.spacer2 = tk.Label(self.mainbar,text=" ",bg="gray10")
+        self.spacer2.pack(side=tk.LEFT)
+
+        self.SendMenu = tk.Menu(root, background='gray10', foreground='white',
+                                activebackground='#004c99', activeforeground='white',
+                                tearoff=0)
+        self.SendDrop = tk.Label(self.mainbar,text="Send",bg="gray10",fg="white")
+        self.SendDrop.pack(side=tk.LEFT)
+        self.SendDrop.bind("<Button-1>",self.do_send_popup)
         self.spacer = tk.Label(self.statbar,text="    ",bg="gray10")
         self.spacer.pack(side=tk.RIGHT)
         self.pro = ttk.Progressbar(self.statbar,length=200)
@@ -203,6 +232,8 @@ class MenuAdd(tk.Frame):
         self.ebcontroller=ebcontroller
         self.FileMenu.add_command(label="Refresh", command=self.ebcontroller.chatbox.trigger)
         self.FileMenu.add_command(label="About",command=self.about)
+
+        self.SendMenu.add_command(label="Send Image", command = self.ebcontroller.ebox.sendimage)
     def do_file_popup(self,event):
         # display the popup menu
         try:
@@ -210,6 +241,14 @@ class MenuAdd(tk.Frame):
         finally:
             # make sure to release the grab (Tk 8.0a1 only)
             self.FileMenu.grab_release()
+
+    def do_send_popup(self,event):
+        # display the popup menu
+        try:
+            self.SendMenu.tk_popup(event.x_root, event.y_root + 15, 0)
+        finally:
+            # make sure to release the grab (Tk 8.0a1 only)
+            self.SendMenu.grab_release()
 
     def about(self):
         print("abouted")
@@ -237,7 +276,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Electric Boogaloo Chat Noise Client" + clientversion)
     topbar = MenuAdd(root, server, port,clientversion)
-    main = EBClient(root,server,port,username,5)
+    main = EBClient(root,server,port,username,9)
     topbar.linker(main)
     rethread = threading.Thread(target=main.chatbox.runable,daemon=True)
     rethread.start()
