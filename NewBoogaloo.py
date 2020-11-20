@@ -10,8 +10,14 @@ from tkinter import ttk
 from elevate import elevate
 from tkinter import filedialog
 import os
-
+from tkinter import simpledialog
+from ctypes import windll
+import ctypes
+import urllib
+import pickle
 #elevate()
+
+
 class TextInputBlock(tk.Frame):
     def __init__(self,parent,server,port,username,font,*args,**kwargs):
         self.font= font
@@ -44,6 +50,10 @@ class TextInputBlock(tk.Frame):
         except:
             print("EmbedUp error")
             pass
+    def sendlink(self,*args):
+        self.linkname = simpledialog.askstring("Chat Noise -> Link", "Input link to send")
+        self.url = self.server + ":" + self.port + "?send=" + "|link|" + self.linkname + "&id=" + self.getid()
+        self.lrequest = requests.get(url=self.url)
     def getid(self):
         self.res = EBLib.getid(self.server,self.port)
         self.out = str(int(self.res) + 1)
@@ -215,9 +225,16 @@ class MenuAdd(tk.Frame):
         self.SendMenu = tk.Menu(root, background='gray10', foreground='white',
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
-        self.SendDrop = tk.Label(self.mainbar,text="Send",bg="gray10",fg="white")
+        self.SendDrop = tk.Label(self.mainbar,text="Send  ",bg="gray10",fg="white")
         self.SendDrop.pack(side=tk.LEFT)
         self.SendDrop.bind("<Button-1>",self.do_send_popup)
+        self.SetMenu = tk.Menu(root, background='gray10', foreground='white',
+                                activebackground='#004c99', activeforeground='white',
+                                tearoff=0)
+
+        self.SetDrop = tk.Label(self.mainbar,text="Settings",bg="gray10",fg="white")
+        self.SetDrop.pack(side=tk.LEFT)
+        self.SetDrop.bind("<Button-1>",self.do_set_popup)
         self.spacer = tk.Label(self.statbar,text="    ",bg="gray10")
         self.spacer.pack(side=tk.RIGHT)
         self.pro = ttk.Progressbar(self.statbar,length=200)
@@ -234,6 +251,12 @@ class MenuAdd(tk.Frame):
         self.FileMenu.add_command(label="About",command=self.about)
 
         self.SendMenu.add_command(label="Send Image", command = self.ebcontroller.ebox.sendimage)
+        self.SendMenu.add_command(label="Send Link",command=self.ebcontroller.ebox.sendlink)
+
+        self.SetMenu.add_command(label="Change Username",command=changename)
+        self.SetMenu.add_command(label="Change Port", command=changeport)
+        self.SetMenu.add_command(label="Change Server", command=changeserver)
+        self.SetMenu.add_command(label="Change ImageNumber",command=changeimgload)
     def do_file_popup(self,event):
         # display the popup menu
         try:
@@ -250,6 +273,12 @@ class MenuAdd(tk.Frame):
             # make sure to release the grab (Tk 8.0a1 only)
             self.SendMenu.grab_release()
 
+    def do_set_popup(self,event):
+        # display popup
+        try:
+            self.SetMenu.tk_popup(event.x_root, event.y_root + 15,0)
+        finally:
+            self.SetMenu.grab_release()
     def about(self):
         print("abouted")
         try:
@@ -266,20 +295,152 @@ class MenuAdd(tk.Frame):
                                                                                        " using Tkinter GUI\n"
                                                                                        "Server Version: " + self.serverversion)
 
+def checkupdates(versionu):
+    print(versionu)
+    is_adminp = ctypes.windll.shell32.IsUserAnAdmin()
+    if is_adminp == 1:
+        is_admin = True
+    else:
+        is_admin = False
+    verrequest = requests.get(url="https://raw.githubusercontent.com/InventorXtreme/ChatNoise/master/version")
+    if versionu == verrequest.text:
+        pass
+    else:
+        versionmenu = messagebox.askquestion(title="Electic Boogaloo Update", message="Update found!\n"
+                                                                                "Your Version :" + clientversion + "\n"
+                                                                                "New Version: " + verrequest.text + "\n"
+                                                                                "Update to new version?", parent=root)
+        if versionmenu == "yes":
+            download_folder = os.path.expanduser("~") + "/Downloads/"
+            snip = verrequest.text[2:]
+            url = "https://github.com/InventorXtreme/ChatNoise/releases/download/" + snip + "/setup.exe"
+            print(url)
+            # messagebox.showinfo("Downloading Update...","Downloading Update...")
+            if is_admin == False:
+                root.destroy()
+                elevate()
+            else:
+                urllib.request.urlretrieve(url, r"C:\temp\setup.exe")
+                os.startfile(r"C:\temp\setup.exe")
+                exit()
+
+
+def changename():
+    global username,server,port
+    config = pickle.load(open("config.p", "rb"))
+    namesetup = simpledialog.askstring("Setup", "Please Enter Your Username")
+
+    config["username"] = namesetup
+    pickle.dump(config, open("config.p", "wb+"))
+    config = pickle.load(open("config.p", "rb"))
+    username = config["username"]
+    server = config["server"]
+    port = config["port"]
+    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+
+def changename():
+    global username,server,port
+    config = pickle.load(open("config.p", "rb"))
+    namesetup = simpledialog.askstring("Setup", "Please Enter Your Username")
+
+    config["username"] = namesetup
+    pickle.dump(config, open("config.p", "wb+"))
+    config = pickle.load(open("config.p", "rb"))
+    username = config["username"]
+    server = config["server"]
+    port = config["port"]
+    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+
+def changeport():
+    global username,server,port
+    config = pickle.load(open("config.p", "rb"))
+    portsetup = simpledialog.askstring("Setup", "Please Enter Your Port")
+    config["port"] = portsetup
+    pickle.dump(config, open("config.p", "wb+"))
+    config = pickle.load(open("config.p", "rb"))
+    username = config["username"]
+    server = config["server"]
+    port = config["port"]
+    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+
+
+def changeserver():
+    global username,server,port
+    config = pickle.load(open("config.p", "rb"))
+    serversetup = simpledialog.askstring("Setup", "Please Enter Your Server")
+    config["server"] = serversetup
+    pickle.dump(config, open("config.p", "wb+"))
+    config = pickle.load(open("config.p", "rb"))
+    username = config["username"]
+    server = config["server"]
+    port = config["port"]
+    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+
+def changeimgload():
+    global username,server,port
+    config = pickle.load(open("config.p", "rb"))
+    imgnumsetup = int(simpledialog.askstring("Setup", "Please Enter the number of images to load"))
+    config["imgnum"] = imgnumsetup
+    pickle.dump(config, open("config.p", "wb+"))
+    config = pickle.load(open("config.p", "rb"))
+    username = config["username"]
+    server = config["server"]
+    port = config["port"]
+    imgnum = config["imgnum"]
+    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+
 
 if __name__ == "__main__":
-    server = "https://inventorxtreme19.pythonanywhere.com"
-    username = "/Alex"
-    port = "443"
+    #server = "https://inventorxtreme19.pythonanywhere.com"
+    #username = "/Alex"
+    #port = "443"
     clientversion = "- 0.10.0"
     windll.shcore.SetProcessDpiAwareness(1)
+
     root = tk.Tk()
+
     root.title("Electric Boogaloo Chat Noise Client" + clientversion)
+
+    try:
+        config = pickle.load(open("config.p", "rb"))
+        username = config["username"]
+        server = config["server"]
+        port = config["port"]
+        imgnum = int(config["imgnum"])
+        print("config loaded")
+    except:
+        print("CONFIG ERROR: SETTING UP")
+        namesetup = simpledialog.askstring("Setup","Please Enter Your Username")
+        serversetup = simpledialog.askstring("Setup","Please Enter Your Server Including the http:// or https://")
+        portsetup = simpledialog.askstring("Setup","Please Enter Your port")
+        imgnumsetup = int(simpledialog.askstring("Setup", "Please Enter the number of images to load"))
+        config = {}
+        if isinstance(imgnumsetup, (int, float, complex)) and not isinstance(imgnumsetup, bool):
+            config["server"] = serversetup
+            config["port"] = portsetup
+            config["username"] = namesetup
+            config["imgnum"] = imgnumsetup
+            pickle.dump(config, open("config.p", "wb+"))
+            config = pickle.load(open("config.p", "rb"))
+            username = config["username"]
+            server = config["server"]
+            imgnum = config["imgnum"]
+            port = config["port"]
+            print("config loaded")
+        else:
+            root.destroy()
+
+
+    print(username)
+
     topbar = MenuAdd(root, server, port,clientversion)
-    main = EBClient(root,server,port,username,9)
+    main = EBClient(root,server,port,username,imgnum)
     topbar.linker(main)
+    root.update_idletasks()
+    checkupdates(clientversion)
     rethread = threading.Thread(target=main.chatbox.runable,daemon=True)
     rethread.start()
     main.pack(fill=tk.BOTH)
     root.bind('<Return>', main.ebox.send)
+    main.chatbox.focus_set()
     root.mainloop()
