@@ -14,5 +14,5 @@ List of current features:
 
 Upcoming features:
 1. Themes and other customizable widgets
-2. Embedded links
-3. Cross server sync features to distribute server load and bypass many network blocks
+2. Cross server sync features to distribute server load and bypass many network blocks
+3. Username and server verification.
