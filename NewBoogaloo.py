@@ -15,6 +15,12 @@ from ctypes import windll
 import ctypes
 import urllib
 import pickle
+import sys
+import dill
+
+global root
+global topbar
+global main
 #elevate()
 
 
@@ -156,7 +162,10 @@ class ChatReadOut(tk.Frame):
             self.icment = 100 / self.imageback
             self.icment = self.icment / 2
             #TODO Make each image load individualy from eachother
-
+            self.string = self.imglist[self.imgrender]
+            self.ctrtrue = self.string.find(" ")
+            if self.ctrtrue != -1:
+                self.imglist[self.imgrender] = "404error.png"
             #self.textbox.see(tk.END)
             self.prepstring = str(self.imgrender) + ".0"
             topbar.pro.step(self.icment)
@@ -210,7 +219,7 @@ class MenuAdd(tk.Frame):
         self.statbar = EBLib.TopBar(self.parent)
         self.statbar.pack(fill='x',side = tk.BOTTOM)
         # MENUBAR CODE //todo: Make OOP
-        self.FileMenu = tk.Menu(root, background='gray10', foreground='white',
+        self.FileMenu = tk.Menu(parent, background='gray10', foreground='white',
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
         self.FileDrop = tk.Label(self.mainbar, text="File", bg="gray10", fg="white")
@@ -222,13 +231,13 @@ class MenuAdd(tk.Frame):
         self.spacer2 = tk.Label(self.mainbar,text=" ",bg="gray10")
         self.spacer2.pack(side=tk.LEFT)
 
-        self.SendMenu = tk.Menu(root, background='gray10', foreground='white',
+        self.SendMenu = tk.Menu(parent, background='gray10', foreground='white',
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
         self.SendDrop = tk.Label(self.mainbar,text="Send  ",bg="gray10",fg="white")
         self.SendDrop.pack(side=tk.LEFT)
         self.SendDrop.bind("<Button-1>",self.do_send_popup)
-        self.SetMenu = tk.Menu(root, background='gray10', foreground='white',
+        self.SetMenu = tk.Menu(parent, background='gray10', foreground='white',
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
 
@@ -307,9 +316,9 @@ def checkupdates(versionu):
         pass
     else:
         versionmenu = messagebox.askquestion(title="Electic Boogaloo Update", message="Update found!\n"
-                                                                                "Your Version :" + clientversion + "\n"
+                                                                                "Your Version :" + versionu + "\n"
                                                                                 "New Version: " + verrequest.text + "\n"
-                                                                                "Update to new version?", parent=root)
+                                                                                "Update to new version?")
         if versionmenu == "yes":
             download_folder = os.path.expanduser("~") + "/Downloads/"
             snip = verrequest.text[2:]
@@ -389,12 +398,20 @@ def changeimgload():
     imgnum = config["imgnum"]
     messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
 
+def main():
+    global root
+    global topbar
+    global main
+    try:
+        if sys.argv[1] != "-u":
+            elevate()
 
-if __name__ == "__main__":
+    except:
+        elevate()
+        pass
     #server = "https://inventorxtreme19.pythonanywhere.com"
     #username = "/Alex"
     #port = "443"
-    clientversion = "- 0.10.0"
     windll.shcore.SetProcessDpiAwareness(1)
 
     root = tk.Tk()
@@ -444,3 +461,18 @@ if __name__ == "__main__":
     root.bind('<Return>', main.ebox.send)
     main.chatbox.focus_set()
     root.mainloop()
+
+if __name__ == "__main__":
+    clientversion = "- 0.10.0"
+    x=0
+
+
+    try:
+        file2 = open("hj.txt", "rb")
+        bigboi = dill.load(file2)
+        file2.close()
+        x = 20
+        bigboi()
+    except:
+        if x != 20:
+            main()
