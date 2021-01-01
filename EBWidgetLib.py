@@ -228,3 +228,53 @@ class CustomText(tk.Text):
             self.mark_set("matchStart", index)
             self.mark_set("matchEnd", "%s+%sc" % (index, count.get()))
             self.tag_add(tag, "matchStart", "matchEnd")
+
+class ChannelListBox(tk.Frame):
+    def __init__(self,parent,rootobj,*args,**kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.searchvar = tk.StringVar(value="Search")
+        self.searchvar.trace("w", self.updatelistbox)
+        self.searchbar = tk.Entry(self, textvariable=self.searchvar, bg="gray10", fg="white")
+        self.searchbar.bind('<Button-1>', self.clearentry)
+        self.searchbar.pack(fill=tk.X)
+        self.channellistbox = tk.Listbox(self,bg="gray10",fg="white")
+        self.channellistbox.pack(fill=tk.BOTH,expand=1)
+        self.channellistbox.bind('<<ListboxSelect>>',self.changechan)
+        self.rootobj = rootobj
+
+
+
+    def loadlist(self):
+        self.textfile = open("channellist.txt","r+")
+        self.channellist = self.textfile.read().splitlines()
+        self.channellist.append("Main Channel")
+        for self.channelvalue in self.channellist:
+            self.channellistbox.insert(tk.END,self.channelvalue)
+
+        self.textfile.close()
+
+    def updatelistbox(self,*args):
+        self.searchterm=self.searchvar.get()
+        self.channellistbox.delete(0,tk.END)
+
+        try:
+            for self.searchitem in self.channellist:
+                if self.searchterm.lower() in self.searchitem.lower():
+                    self.channellistbox.insert(tk.END,self.searchitem)
+        except:
+            pass
+    def clearentry(self,event):
+        print(event.widget)
+        #print(root.focus_get())
+        if event.widget != self.parent.focus_get():
+            self.searchbar.delete(0,tk.END)
+
+    def changechan(self,*args):
+        print(self.channellistbox.get(self.channellistbox.curselection()))
+        if self.channellistbox.get(self.channellistbox.curselection()) == "Main Channel":
+            self.rootobj.changechan("")
+        else:
+            self.rootobj.changechan(self.channellistbox.get(self.channellistbox.curselection()))
+        #self.rootobj.chatbox.trigger()
+        print(self.channellistbox.get(self.channellistbox.curselection()))

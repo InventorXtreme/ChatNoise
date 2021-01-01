@@ -31,12 +31,6 @@ def allowed_file(_file):
 def version():
     return servversion
 
-
-@app.route("/user/idget")
-def isidgood():
-    return
-
-
 @app.route('/image/<image_name>', methods=['GET'])
 def get_image(image_name):
     try:
@@ -108,7 +102,16 @@ def home():
     global msgsync
     if "send" in request.args:
         if int(request.args['id']) > messageid:
-            chatlog = open("chatlog.txt", 'a')
+            if 'channel' in request.args:
+                name = request.args["channel"]
+                try:
+                    chatlog = open(name,'a')
+                except FileNotFoundError:
+                    temp3 = open(name,'w')
+                    temp3.close()
+                    chatlog = open(name,'a')
+            else:
+                chatlog = open("chatlog.txt", 'a')
             message = request.args['send']
             vermessage = message + '\n'
             chatlog.write(vermessage)
@@ -147,7 +150,16 @@ def home():
                 except:
                     pass
             try:
-                chatlog = open("chatlog.txt", 'a')
+                if "channel" in request.args:
+                    name = request.args["channel"]
+                    try:
+                        chatlog = open(name,'a')
+                    except FileNotFoundError:
+                        temp = open(name,'w')
+                        temp.close()
+                        chatlog = open(name,'a')
+                else:
+                    chatlog = open("chatlog.txt", 'a')
             except:
                 pass
 
@@ -157,13 +169,23 @@ def home():
         return "cmd good"
 
     elif "get" in request.args:
-        with open("chatlog.txt",'r') as fin:
-            return Response(fin.read(), mimetype='text/plain')
+        if "channel" in request.args:
+            name = request.args["channel"]
+            try:
+                with open(name,"r") as fin:
+                    return Response(fin.read(), mimetype='text/plain')
+            except FileNotFoundError:
+                temp2 = open(name,'w')
+                temp2.close()
+                with open(name,"r") as fin:
+                    return Response(fin.read(), mimetype='text/plain')
+        else:
+            with open("chatlog.txt",'r') as fin:
+                return Response(fin.read(), mimetype='text/plain')
     elif "ret" in request.args:
         sync()
         return "hek"
 
     else:
         return "no request"
-
 app.run(host = "0.0.0.0", port = 80)

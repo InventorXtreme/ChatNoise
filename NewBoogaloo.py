@@ -33,12 +33,16 @@ class TextInputBlock(tk.Frame):
         self.parent = parent
         tk.Frame.__init__(self,parent,*args,**kwargs)
         self.chatbox = tk.Entry(self,width=20,font=self.font,bg="gray10",fg="white",insertbackground="white")
-        self.chatbox.pack(expand=True,fill=tk.BOTH,side=tk.LEFT)
+        self.chatbox.pack(fill=tk.X,side=tk.LEFT,expand=True)
         self.sendbutton = tk.Button(self,height=1,width=6,text="send",command=self.send,bg="gray10",fg="white")
         self.sendbutton.pack(side=tk.RIGHT)
+        self.chan = ""
     def send(self,*args):
         self.text = self.chatbox.get()
         self.url = self.server + ":" + self.port + "?send=" + self.username + ": " + self.text + "&id=" + self.getid()
+
+        if self.chan != "":
+            self.url = self.url + "&channel="+self.chan
         outboundrequest = requests.get(url=self.url)
         print(self.url)
         print(outboundrequest)
@@ -52,6 +56,8 @@ class TextInputBlock(tk.Frame):
                 self.imgrequest = requests.post(self.serverurl, files={'file': filedata})
                 self.outname = os.path.basename(filedata.name)
                 self.imageurl = self.server + ":" + self.port + "?send=" + "img|" + self.outname + "&id=" + self.getid()
+                if self.chan != "":
+                    self.imageurl = self.imageurl + "&channel=" + self.chan
                 self.outimgrequest = requests.get(url=self.imageurl)
         except:
             print("EmbedUp error")
@@ -59,11 +65,15 @@ class TextInputBlock(tk.Frame):
     def sendlink(self,*args):
         self.linkname = simpledialog.askstring("Chat Noise -> Link", "Input link to send")
         self.url = self.server + ":" + self.port + "?send=" + "|link|" + self.linkname + "&id=" + self.getid()
+        if self.chan != "":
+            self.url = self.url + "&channel="+self.chan
         self.lrequest = requests.get(url=self.url)
     def getid(self):
         self.res = EBLib.getid(self.server,self.port)
         self.out = str(int(self.res) + 1)
         return self.out
+    def setchan(self,channel):
+        self.chan = channel
 
 
 class ChatReadOut(tk.Frame):
@@ -74,11 +84,13 @@ class ChatReadOut(tk.Frame):
         self.parent = parent
         self.imageback = imageback
         tk.Frame.__init__(self,parent,*args,**kwargs)
-        self.textbox = EBLib.CustomText(font=self.font)
+        self.textbox = EBLib.CustomText(self,font=self.font)
         self.textbox.config(state=tk.DISABLED)
         self.textbox.config(bg="gray10",fg="white")
         self.hypeman = EBLib.HyperlinkManager(self.textbox)
         self.textbox.pack(fill=tk.BOTH,expand=True)
+
+        self.chan = ""
 
         self.old = "ree"
         self.new = "r"
@@ -104,6 +116,8 @@ class ChatReadOut(tk.Frame):
         self.textbox.config(state=tk.NORMAL)
         self.textbox.see(tk.END)
         self.url = self.server + ":" + self.port + "?get"
+        if self.chan != "":
+            self.url = self.url + "&channel="+self.chan
         self.incommingdata = requests.get(self.url)
         self.downloadedtext = self.incommingdata.text
         self.lines = self.downloadedtext.split("\n")
@@ -143,6 +157,9 @@ class ChatReadOut(tk.Frame):
         self.richthread.join()
         self.highlightthread.join()
         print("here")
+
+    def setchan(self,channel):
+        self.chan = channel
 
     def highlight(self):
         self.textbox.tag_configure("blue", foreground="#00c0FF")
@@ -200,56 +217,66 @@ class EBClient(tk.Frame):
         self.port = port
         self.imgback = imgback
         self.chatbox = ChatReadOut(self,self.server,self.port,('Biome', 13),self.imgback)
-        self.chatbox.pack(fill=tk.BOTH)
         self.ebox = TextInputBlock(self,self.server,self.port,self.username,font = ('Biome', 13))
-        self.ebox.pack(expand=True,fill=tk.BOTH)
+        self.chatbox.pack(fill=tk.BOTH, expand=True)
+        self.ebox.pack(fill=tk.X, side=tk.TOP)
+    def changechan(self,channelchange):
+        self.chatbox.setchan(channelchange)
+        self.ebox.setchan(channelchange)
+        self.chatbox.trigger()
+
+
+
 
 class MenuAdd(tk.Frame):
+    global main
     def __init__(self,parent,server,port,clientversion,*args,**kwargs):
         #s = ttk.Style()
         #s.theme_use("")
-
         self.clientversion = clientversion
         tk.Frame.__init__(self,parent,*args,**kwargs)
         self.parent = parent
         self.server = server
         self.port = port
         self.mainbar = EBLib.TopBar(self.parent)
-        self.mainbar.pack(fill='x', side=tk.TOP)
         self.statbar = EBLib.TopBar(self.parent)
-        self.statbar.pack(fill='x',side = tk.BOTTOM)
+        #self.bigboiroot = bigboiroot
         # MENUBAR CODE //todo: Make OOP
         self.FileMenu = tk.Menu(parent, background='gray10', foreground='white',
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
         self.FileDrop = tk.Label(self.mainbar, text="File", bg="gray10", fg="white")
 
-        self.FileDrop.pack(side=tk.LEFT)
         self.FileDrop.bind("<Button-1>",self.do_file_popup)
         self.spacer = tk.Label(self.statbar, text="    ", bg="gray10")
-        self.spacer.pack(side=tk.RIGHT)
         self.spacer2 = tk.Label(self.mainbar,text=" ",bg="gray10")
-        self.spacer2.pack(side=tk.LEFT)
 
         self.SendMenu = tk.Menu(parent, background='gray10', foreground='white',
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
         self.SendDrop = tk.Label(self.mainbar,text="Send  ",bg="gray10",fg="white")
-        self.SendDrop.pack(side=tk.LEFT)
         self.SendDrop.bind("<Button-1>",self.do_send_popup)
         self.SetMenu = tk.Menu(parent, background='gray10', foreground='white',
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
 
         self.SetDrop = tk.Label(self.mainbar,text="Settings",bg="gray10",fg="white")
-        self.SetDrop.pack(side=tk.LEFT)
         self.SetDrop.bind("<Button-1>",self.do_set_popup)
         self.spacer = tk.Label(self.statbar,text="    ",bg="gray10")
-        self.spacer.pack(side=tk.RIGHT)
         self.pro = ttk.Progressbar(self.statbar,length=200)
-        self.pro.pack(side=tk.RIGHT)
         self.status = tk.Label(self.statbar, text="Ready   ",bg="gray10",fg="white")
         self.status.pack(side=tk.LEFT)
+        self.mainbar.pack(fill='x', side=tk.TOP)
+        self.statbar.pack(fill='x', side=tk.BOTTOM)
+        self.FileDrop.pack(side=tk.LEFT)
+        self.spacer.pack(side=tk.RIGHT)
+        self.spacer2.pack(side=tk.LEFT)
+        self.SendDrop.pack(side=tk.LEFT)
+        self.SetDrop.pack(side=tk.LEFT)
+        self.spacer.pack(side=tk.RIGHT)
+        self.pro.pack(side=tk.RIGHT)
+
+
 
     def statuschange(self,text):
         self.text = text
@@ -261,6 +288,8 @@ class MenuAdd(tk.Frame):
 
         self.SendMenu.add_command(label="Send Image", command = self.ebcontroller.ebox.sendimage)
         self.SendMenu.add_command(label="Send Link",command=self.ebcontroller.ebox.sendlink)
+        self.SendMenu.add_command(label="Add Channel",command=self.addchan)
+        self.SendMenu.add_command(label="Back to Main Channel",command=lambda: main.changechan(""))
 
         self.SetMenu.add_command(label="Change Username",command=changename)
         self.SetMenu.add_command(label="Change Port", command=changeport)
@@ -303,6 +332,11 @@ class MenuAdd(tk.Frame):
                                                    "Client Version " + self.clientversion + ""
                                                                                        " using Tkinter GUI\n"
                                                                                        "Server Version: " + self.serverversion)
+    def addchan(self):
+        self.newchan = simpledialog.askstring("Make New Channel", "Enter The name of the channel")
+        self.lazy = self.server+":" + self.port + "/addchan/" + "?newchan=" + self.newchan
+        self.bigboi = requests.get(self.lazy)
+
 
 def checkupdates(versionu):
     print(versionu)
@@ -338,27 +372,17 @@ def changename():
     global username,server,port
     config = pickle.load(open("config.p", "rb"))
     namesetup = simpledialog.askstring("Setup", "Please Enter Your Username")
+    if len(namesetup) < 16:
+        config["username"] = namesetup
+        pickle.dump(config, open("config.p", "wb+"))
+        config = pickle.load(open("config.p", "rb"))
+        username = config["username"]
+        server = config["server"]
+        port = config["port"]
+        messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+    else:
+        messagebox.showerror("Setup", "Uesrnames must be 15 characters or less")
 
-    config["username"] = namesetup
-    pickle.dump(config, open("config.p", "wb+"))
-    config = pickle.load(open("config.p", "rb"))
-    username = config["username"]
-    server = config["server"]
-    port = config["port"]
-    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
-
-def changename():
-    global username,server,port
-    config = pickle.load(open("config.p", "rb"))
-    namesetup = simpledialog.askstring("Setup", "Please Enter Your Username")
-
-    config["username"] = namesetup
-    pickle.dump(config, open("config.p", "wb+"))
-    config = pickle.load(open("config.p", "rb"))
-    username = config["username"]
-    server = config["server"]
-    port = config["port"]
-    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
 
 def changeport():
     global username,server,port
@@ -398,7 +422,8 @@ def changeimgload():
     imgnum = config["imgnum"]
     messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
 
-def main():
+
+def mainfunc():
     global root
     global topbar
     global main
@@ -450,14 +475,38 @@ def main():
 
     print(username)
 
+
+
+
     topbar = MenuAdd(root, server, port,clientversion)
-    main = EBClient(root,server,port,username,imgnum)
+
+
+    pane = tk.PanedWindow()
+    pane.pack(expand=True,fill=tk.BOTH)
+
+    # WHAT EVER YOU DO, DO NOT MOVE MAIN ABOVE THE PANE LINE
+
+    main = EBClient(root, server, port, username, imgnum)
+
+
+
+
+    chanurl = server+ ":" +port + "/chanlist/"
+    urllib.request.urlretrieve(chanurl, "channellist.txt")
+    chanlist = EBLib.ChannelListBox(root,main)
+    chanlist.pack_propagate()
+    #chanlist.pack(fill=tk.Y,side=tk.LEFT)
+    pane.add(chanlist, stretch="always")
+    chanlist.loadlist()
+
     topbar.linker(main)
     root.update_idletasks()
     checkupdates(clientversion)
     rethread = threading.Thread(target=main.chatbox.runable,daemon=True)
     rethread.start()
-    main.pack(fill=tk.BOTH)
+
+    #main.pack(expand=1)
+    pane.add(main)
     root.bind('<Return>', main.ebox.send)
     main.chatbox.focus_set()
     root.mainloop()
@@ -475,4 +524,4 @@ if __name__ == "__main__":
         bigboi()
     except:
         if x != 20:
-            main()
+            mainfunc()

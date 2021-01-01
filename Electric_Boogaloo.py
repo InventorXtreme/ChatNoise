@@ -102,7 +102,6 @@ def changename():
     print("CONFIG NAME SETTUP STARTED")
     namesetup = simpledialog.askstring("Chat Noise -> Settings -> Username", "Input New Username:")
     config = pickle.load(open("files/config.p", "rb"))
-
     config["username"] = namesetup
 
     pickle.dump(config, open("files/config.p", "wb+"))
