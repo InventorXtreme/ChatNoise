@@ -1,7 +1,6 @@
 import tkinter as tk
 import EBWidgetLib as EBLib
 import requests
-from ctypes import windll
 import threading
 import time
 from tkinter import messagebox
@@ -11,7 +10,11 @@ from elevate import elevate
 from tkinter import filedialog
 import os
 from tkinter import simpledialog
-from ctypes import windll
+try:
+    from ctypes import windll
+    win = True
+except:
+    win = False
 import ctypes
 import urllib
 import pickle
@@ -340,7 +343,11 @@ class MenuAdd(tk.Frame):
 
 def checkupdates(versionu):
     print(versionu)
-    is_adminp = ctypes.windll.shell32.IsUserAnAdmin()
+    try:    
+        is_adminp = ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        pass
+        is_adminp = 1
     if is_adminp == 1:
         is_admin = True
     else:
@@ -437,7 +444,10 @@ def mainfunc():
     #server = "https://inventorxtreme19.pythonanywhere.com"
     #username = "/Alex"
     #port = "443"
-    windll.shcore.SetProcessDpiAwareness(1)
+    try:
+        windll.shcore.SetProcessDpiAwareness(1)
+    except:
+        pass
 
     root = tk.Tk()
 
