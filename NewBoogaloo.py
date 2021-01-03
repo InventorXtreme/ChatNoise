@@ -524,7 +524,7 @@ def mainfunc():
     root.mainloop()
 
 if __name__ == "__main__":
-    clientversion = "- 0.10.0"
+    clientversion = "- 0.11.0"
     x=0
 
 
