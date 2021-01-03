@@ -196,10 +196,12 @@ class ChatReadOut(tk.Frame):
             print(self.imgrender,self.imglist[self.imgrender])
             self.textbox.see(tk.END)
             topbar.pro.step(self.icment)
-            if self.imagenum == self.imageback:
-                topbar.statuschange("Ready   ")
-                topbar.pro.pack_forget()
-
+            # if self.imagenum == self.imageback:
+            #     topbar.statuschange("Ready   ")
+            #     topbar.pro.pack_forget()
+        topbar.statuschange("Ready   ")
+        topbar.pro['value'] = 0
+        topbar.pro.pack_forget()
     def richlink(self):
         for self.linkrender in self.linklist:
             self.outstring = self.linklist[self.linkrender]
