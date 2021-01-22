@@ -221,8 +221,8 @@ class EBClient(tk.Frame):
         self.username = username
         self.port = port
         self.imgback = imgback
-        self.chatbox = ChatReadOut(self,self.server,self.port,('Biome', 13),self.imgback)
-        self.ebox = TextInputBlock(self,self.server,self.port,self.username,font = ('Biome', 13))
+        self.chatbox = ChatReadOut(self,self.server,self.port,('OCR A', 13),self.imgback)
+        self.ebox = TextInputBlock(self,self.server,self.port,self.username,font = ('OCR A', 13))
         self.chatbox.pack(fill=tk.BOTH, expand=True)
         self.ebox.pack(fill=tk.X, side=tk.TOP)
     def changechan(self,channelchange):
@@ -372,8 +372,10 @@ def checkupdates(versionu):
                 root.destroy()
                 elevate()
             else:
-                urllib.request.urlretrieve(url, r"C:\temp\setup.exe")
-                os.startfile(r"C:\temp\setup.exe")
+                #urllib.request.urlretrieve(url, r"C:\temp\setup.exe")
+                setupfile = requests.get(url)
+                with open(r'C:\temp\setup.exe') as helpme:
+                    helpme.write(setupfile.content)
                 exit()
 
 
@@ -504,16 +506,22 @@ def mainfunc():
 
 
     chanurl = server+ ":" +port + "/chanlist/"
-    urllib.request.urlretrieve(chanurl, "channellist.txt")
+    print(chanurl)
+    #urllib.request.urlretrieve(chanurl, "channellist.txt")
+    r = requests.get(chanurl)
+
+    with open("channellist.txt",'wb') as hhhh:
+        hhhh.write(r.content)
     chanlist = EBLib.ChannelListBox(root,main)
     chanlist.pack_propagate()
     #chanlist.pack(fill=tk.Y,side=tk.LEFT)
     pane.add(chanlist, stretch="always")
     chanlist.loadlist()
 
+
     topbar.linker(main)
     root.update_idletasks()
-    checkupdates(clientversion)
+    #checkupdates(clientversion)
     rethread = threading.Thread(target=main.chatbox.runable,daemon=True)
     rethread.start()
 
