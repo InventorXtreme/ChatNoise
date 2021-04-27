@@ -36,20 +36,28 @@ class TextInputBlock(tk.Frame):
         self.parent = parent
         tk.Frame.__init__(self,parent,*args,**kwargs)
         self.chatbox = tk.Entry(self,width=20,font=self.font,bg="gray10",fg="white",insertbackground="white")
+        self.chatbox.bind('<Control-BackSpace>', self.entry_ctrl_bs)
         self.chatbox.pack(fill=tk.X,side=tk.LEFT,expand=True)
         self.sendbutton = tk.Button(self,height=1,width=6,text="send",command=self.send,bg="gray10",fg="white")
         self.sendbutton.pack(side=tk.RIGHT)
         self.chan = ""
+    def entry_ctrl_bs(self,event):
+        ent = event.widget
+        end_idx = ent.index(tk.INSERT)
+        start_idx = ent.get().rfind(" ", None, end_idx)
+        ent.selection_range(start_idx, end_idx)
+
     def send(self,*args):
         self.text = self.chatbox.get()
-        self.url = self.server + ":" + self.port + "?send=" + self.username + ": " + self.text + "&id=" + self.getid()
-
-        if self.chan != "":
-            self.url = self.url + "&channel="+self.chan
-        outboundrequest = requests.get(url=self.url)
-        print(self.url)
-        print(outboundrequest)
-        self.chatbox.delete(0,tk.END)
+        if self.text != "":
+            if self.text != len(self.text) * self.text[0] and self.text[0] != " ":
+                self.url = self.server + ":" + self.port + "?send=" + self.username + ": " + self.text + "&id=" + self.getid()
+                if self.chan != "":
+                    self.url = self.url + "&channel="+self.chan
+                outboundrequest = requests.get(url=self.url)
+                print(self.url)
+                print(outboundrequest)
+                self.chatbox.delete(0,tk.END)
     def sendimage(self,*args):
         self.serverurl =  self.server + ":" + self.port + "/upimage/"
         self.filename = filedialog.askopenfilename(
@@ -124,7 +132,7 @@ class ChatReadOut(tk.Frame):
         self.incommingdata = requests.get(self.url)
         self.downloadedtext = self.incommingdata.text
         self.lines = self.downloadedtext.split("\n")
-        print(self.lines)
+        #print(self.lines)
         self.lines.reverse()
         self.imglist = {}
         self.imgdata = {}
@@ -196,6 +204,8 @@ class ChatReadOut(tk.Frame):
             print(self.imgrender,self.imglist[self.imgrender])
             self.textbox.see(tk.END)
             topbar.pro.step(self.icment)
+            self.imgdata[self.imgrender].widget.bind("<MouseWheel>", scroll_parent)
+            self.imgdata[self.imgrender].bind("<MouseWheel>", scroll_parent)
             # if self.imagenum == self.imageback:
             #     topbar.statuschange("Ready   ")
             #     topbar.pro.pack_forget()
@@ -235,6 +245,7 @@ class EBClient(tk.Frame):
 
 class MenuAdd(tk.Frame):
     global main
+    global audio
     def __init__(self,parent,server,port,clientversion,*args,**kwargs):
         #s = ttk.Style()
         #s.theme_use("")
@@ -265,6 +276,11 @@ class MenuAdd(tk.Frame):
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
 
+        self.AudioDrop = tk.Label(self.mainbar,text="Audio",bg="gray10",fg="white")
+        self.AudioDrop.bind("<Button-1>",self.do_audio_popup)
+        self.AudioMenu = tk.Menu(parent, background='gray10', foreground='white',
+                                activebackground='#004c99', activeforeground='white',
+                                tearoff=0)
         self.SetDrop = tk.Label(self.mainbar,text="Settings",bg="gray10",fg="white")
         self.SetDrop.bind("<Button-1>",self.do_set_popup)
         self.spacer = tk.Label(self.statbar,text="    ",bg="gray10")
@@ -277,6 +293,7 @@ class MenuAdd(tk.Frame):
         self.spacer.pack(side=tk.RIGHT)
         self.spacer2.pack(side=tk.LEFT)
         self.SendDrop.pack(side=tk.LEFT)
+        self.AudioDrop.pack(side=tk.LEFT)
         self.SetDrop.pack(side=tk.LEFT)
         self.spacer.pack(side=tk.RIGHT)
         self.pro.pack(side=tk.RIGHT)
@@ -299,7 +316,12 @@ class MenuAdd(tk.Frame):
         self.SetMenu.add_command(label="Change Username",command=changename)
         self.SetMenu.add_command(label="Change Port", command=changeport)
         self.SetMenu.add_command(label="Change Server", command=changeserver)
+        self.SetMenu.add_command(label="Change Audio Server",command=changeaudioserver)
+        self.SetMenu.add_command(label="Change Audio Port",comman=changeaudioport)
         self.SetMenu.add_command(label="Change ImageNumber",command=changeimgload)
+
+        self.AudioMenu.add_command(label="Connect",command=audio.connect)
+        self.AudioMenu.add_command(label="Disconnect",command=audio.disconnect)
     def do_file_popup(self,event):
         # display the popup menu
         try:
@@ -322,6 +344,12 @@ class MenuAdd(tk.Frame):
             self.SetMenu.tk_popup(event.x_root, event.y_root + 15,0)
         finally:
             self.SetMenu.grab_release()
+
+    def do_audio_popup(self,event):
+        try:
+            self.AudioMenu.tk_popup(event.x_root, event.y_root + 15,0)
+        finally:
+            self.AudioMenu.grab_release()
     def about(self):
         print("abouted")
         try:
@@ -341,6 +369,8 @@ class MenuAdd(tk.Frame):
         self.newchan = simpledialog.askstring("Make New Channel", "Enter The name of the channel")
         self.lazy = self.server+":" + self.port + "/addchan/" + "?newchan=" + self.newchan
         self.bigboi = requests.get(self.lazy)
+
+
 
 
 def checkupdates(versionu):
@@ -380,7 +410,7 @@ def checkupdates(versionu):
 
 
 def changename():
-    global username,server,port
+    global username,server,port,audioserver,audioport
     config = pickle.load(open("config.p", "rb"))
     namesetup = simpledialog.askstring("Setup", "Please Enter Your Username")
     if len(namesetup) < 16:
@@ -396,7 +426,7 @@ def changename():
 
 
 def changeport():
-    global username,server,port
+    global username,server,port,audioserver,audioport
     config = pickle.load(open("config.p", "rb"))
     portsetup = simpledialog.askstring("Setup", "Please Enter Your Port")
     config["port"] = portsetup
@@ -409,9 +439,9 @@ def changeport():
 
 
 def changeserver():
-    global username,server,port
+    global username,server,port,audioserver,audioport
     config = pickle.load(open("config.p", "rb"))
-    serversetup = simpledialog.askstring("Setup", "Please Enter Your Server")
+    serversetup = simpledialog.askstring("Setup", "Please Enter Your Server Including The http(s)://")
     config["server"] = serversetup
     pickle.dump(config, open("config.p", "wb+"))
     config = pickle.load(open("config.p", "rb"))
@@ -421,7 +451,7 @@ def changeserver():
     messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
 
 def changeimgload():
-    global username,server,port
+    global username,server,port,audioserver,audioport
     config = pickle.load(open("config.p", "rb"))
     imgnumsetup = int(simpledialog.askstring("Setup", "Please Enter the number of images to load"))
     config["imgnum"] = imgnumsetup
@@ -433,17 +463,47 @@ def changeimgload():
     imgnum = config["imgnum"]
     messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
 
+def changeaudioserver():
+    global username,server,port,audioserver,audioport
+    config = pickle.load(open("config.p", "rb"))
+    aussetup = simpledialog.askstring("Setup", "Please Enter the server for audio")
+    config["audioserver"] = aussetup
+    pickle.dump(config, open("config.p", "wb+"))
+    config = pickle.load(open("config.p", "rb"))
+    username = config["username"]
+    server = config["server"]
+    port = config["port"]
+    imgnum = config["imgnum"]
+    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+
+def changeaudioport():
+    global username,server,port,audioserver,audioport
+    config = pickle.load(open("config.p", "rb"))
+    aussetupp = simpledialog.askstring("Setup", "Please Enter the port for audio")
+    config["audioport"] = aussetupp
+    pickle.dump(config, open("config.p", "wb+"))
+    config = pickle.load(open("config.p", "rb"))
+    username = config["username"]
+    server = config["server"]
+    port = config["port"]
+    imgnum = config["imgnum"]
+    messagebox.showinfo("Info","Please Restart ChatNoise to apply changes")
+
+def scroll_parent(event):
+    parent = root.nametowidget(event.widget.winfo_parent())
+    parent.event_generate("<MouseWheel>", delta=event.delta, when="now")
 
 def mainfunc():
     global root
     global topbar
     global main
+    global audio
     try:
-        if sys.argv[1] != "-u":
+        if sys.argv[1] == "-u":
             elevate()
 
     except:
-        elevate()
+        #elevate()
         pass
     #server = "https://inventorxtreme19.pythonanywhere.com"
     #username = "/Alex"
@@ -459,23 +519,44 @@ def mainfunc():
 
     try:
         config = pickle.load(open("config.p", "rb"))
+        audioserver = config["audioserver"]
+        print("here")
+        audioport = config["audioport"]
+        print("here")
+
         username = config["username"]
+        print("here")
+
         server = config["server"]
+        print("here")
+
         port = config["port"]
+        print("here")
+
         imgnum = int(config["imgnum"])
+        print("here")
+
         print("config loaded")
+        try:
+            audio = EBLib.Client(audioserver,audioport,root)
+        except:
+            audio = EBLib.Client(audioserver,722,root)
     except:
         print("CONFIG ERROR: SETTING UP")
-        namesetup = simpledialog.askstring("Setup","Please Enter Your Username")
-        serversetup = simpledialog.askstring("Setup","Please Enter Your Server Including the http:// or https://")
-        portsetup = simpledialog.askstring("Setup","Please Enter Your port")
-        imgnumsetup = int(simpledialog.askstring("Setup", "Please Enter the number of images to load"))
+        namesetup = simpledialog.askstring("Setup","Please enter your username")
+        serversetup = simpledialog.askstring("Setup","Please enter your server including the http:// or https://")
+        portsetup = simpledialog.askstring("Setup","Please enter your port")
+        imgnumsetup = int(simpledialog.askstring("Setup", "Please enter the number of images to load"))
+        audioserversetup = simpledialog.askstring("Setup","Please enter the server to use for audio")
+        audioport = simpledialog.askstring('Setup', "Please enter the port to use for audio")
         config = {}
         if isinstance(imgnumsetup, (int, float, complex)) and not isinstance(imgnumsetup, bool):
             config["server"] = serversetup
             config["port"] = portsetup
             config["username"] = namesetup
             config["imgnum"] = imgnumsetup
+            config["audioserver"] = audioserversetup
+            config["audioport"] = audioport
             pickle.dump(config, open("config.p", "wb+"))
             config = pickle.load(open("config.p", "rb"))
             username = config["username"]
@@ -483,6 +564,8 @@ def mainfunc():
             imgnum = config["imgnum"]
             port = config["port"]
             print("config loaded")
+            audio = EBLib.Client(audioserver, audioport,root)
+
         else:
             root.destroy()
 
@@ -496,27 +579,45 @@ def mainfunc():
 
 
     pane = tk.PanedWindow()
+
+
     pane.pack(expand=True,fill=tk.BOTH)
 
     # WHAT EVER YOU DO, DO NOT MOVE MAIN ABOVE THE PANE LINE
 
     main = EBClient(root, server, port, username, imgnum)
 
+    try:
+        chanurl = server+ ":" +port + "/chanlist/"
+        print(chanurl)
 
 
+        chanlist = EBLib.ChannelListBox(root, main, bg="gray10")
+        chanlist.pack_propagate()
+        pane.add(chanlist, stretch="always")
+        pane.add(main)
+        #urllib.request.urlretrieve(chanurl, "channellist.txt")
+        r = requests.get(chanurl)
 
-    chanurl = server+ ":" +port + "/chanlist/"
-    print(chanurl)
-    #urllib.request.urlretrieve(chanurl, "channellist.txt")
-    r = requests.get(chanurl)
 
-    with open("channellist.txt",'wb') as hhhh:
-        hhhh.write(r.content)
-    chanlist = EBLib.ChannelListBox(root,main)
-    chanlist.pack_propagate()
-    #chanlist.pack(fill=tk.Y,side=tk.LEFT)
-    pane.add(chanlist, stretch="always")
-    chanlist.loadlist()
+        # chanlist.pack(fill=tk.Y,side=tk.LEFT)
+        audioman = EBLib.AudioMan(chanlist, audio, bg="gray10")
+        audioman.pack()
+
+
+        #pane.add(audioman, stretch="always")
+        root.update_idletasks()
+        root.update()
+        with open("channellist.txt", 'wb') as hhhh:
+            hhhh.write(r.content)
+        chanlist.loadlist()
+        ChanListGood = True
+    except:
+        print("The channel list could not be loaded, this could indicate a problem with the server/port")
+        pane.add(main)
+
+        ChanListGood = False
+
 
 
     topbar.linker(main)
@@ -524,12 +625,18 @@ def mainfunc():
     #checkupdates(clientversion)
     rethread = threading.Thread(target=main.chatbox.runable,daemon=True)
     rethread.start()
-
     #main.pack(expand=1)
-    pane.add(main)
+
+    #pane.add(subpane)
+
+    try:
+        pane.sash_place(0,150,0)
+    except:
+        pass
     root.bind('<Return>', main.ebox.send)
     main.chatbox.focus_set()
     root.mainloop()
+    audio.disconnect()
 
 if __name__ == "__main__":
     clientversion = "- 0.11.0"

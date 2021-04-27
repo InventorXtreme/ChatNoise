@@ -14,4 +14,4 @@ setup(  name = "Chat Noise 0.11",
         version = "0.11",
         description = "Electric Boogaloo Chat Noise Client",
         options = {"build_exe": build_exe_options},
-        executables = [Executable("NewBoogaloo.py", base=base,icon=r"C:\Users\InventorX\Desktop\chaticon.ico")])
+        executables = [Executable("NewBoogaloo.pye", base=base,icon=r"C:\Users\InventorX\Desktop\chaticon.ico")])

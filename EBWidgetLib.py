@@ -4,6 +4,14 @@ import tkinter as tk
 import urllib
 import requests
 import imghdr
+import socket
+import threading
+import pyaudio
+import struct
+import math
+from tkinter import messagebox
+import time
+from multiprocessing import Process, Value, Array
 #Todo make a status bar that can be placed at the bottom of the root window to show progress of image loading
 #Todo: Make a scrollbar on text widget
 
@@ -28,6 +36,140 @@ class ImageChatFrame(tk.Frame):
             self.widget.pack()
 
 
+
+class AudioMan(tk.Frame):
+    def __init__(self,parent,audioclient,*args,**kwargs):
+        tk.Frame.__init__(self,parent,*args,**kwargs)
+        self.incall = False
+        self.parent = parent
+        self.audioclient = audioclient
+        self.joinbutton = tk.Button(self,text="Connect",command=self.button,bg="gray10",fg="white")
+        self.speaking = False
+        self.infostringdata=audioclient.target_ip + ":" + str(audioclient.target_port)
+        self.infostring = tk.Label(self,text=self.infostringdata,bg="gray10",fg="white")
+        self.joinbutton.pack(side=tk.LEFT)
+        self.infostring.pack(side=tk.LEFT)
+    def button(self):
+        if self.incall == False:
+            if self.audioclient.connect() == 0:
+                self.joinbutton.config(text="Disconnect")
+                self.update_thread = threading.Thread(target=self.update).start()
+                self.incall = True
+            else:
+                messagebox.showerror("AudioMan", "Error connecting to server")
+        else:
+
+            try:
+                self.audioclient.disconnect()
+            except TypeError:
+                pass
+            self.joinbutton.config(text="Connect")
+            self.incall = False
+    def update(self):
+        while True:
+            try:
+                if self.audioclient.decibel > -43:
+                    self.speaking = True
+                    self.infostring.config(fg="green")
+                else:
+                    self.speaking = False
+                    self.infostring.config(fg="white")
+            except:
+                pass
+            if self.incall == False:
+                break
+
+
+class Client:
+    def __init__(self,server,port,parrent):
+        self.parrent = parrent
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.target_ip = server
+        self.target_port = int(port)
+        self.chunk_size = 1024  # 512
+        self.audio_format = pyaudio.paInt16
+        self.channels = 1
+        self.rate = 20000
+        self.decibel = 0
+        # initialise microphone recording
+        self.p = pyaudio.PyAudio()
+        self.connected = False
+
+
+    def connect(self):
+        try:
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            self.s.connect((self.target_ip, self.target_port))
+            self.playing_stream = self.p.open(format=self.audio_format, channels=self.channels, rate=self.rate,
+                                              output=True,
+                                              frames_per_buffer=self.chunk_size)
+            self.recording_stream = self.p.open(format=self.audio_format, channels=self.channels, rate=self.rate,
+                                                input=True,
+                                                frames_per_buffer=self.chunk_size)
+
+            print("Connected to Server")
+
+            # start threads
+            self.connected = True
+            self.receive_thread = threading.Thread(target=self.receive_server_data).start()
+            self.send_thread = threading.Thread(target=self.send_data_to_server).start()
+
+            return 0
+
+        except:
+            print("Couldn't connect to server")
+            return 1
+
+
+
+    def receive_server_data(self):
+        while self.connected:
+            try:
+                # TODO: GET PERF ON RPI4
+                #self.parrent.update_idletasks()
+                #self.parrent.update()
+                self.data = self.s.recv(self.chunk_size)
+
+                self.playing_stream.write(self.data)
+
+
+            except:
+                pass
+
+
+    def send_data_to_server(self):
+        while self.connected:
+
+            #try:
+            self.data = self.recording_stream.read(self.chunk_size)
+            vol = self.rms(self.data)
+            self.decibel = 20 * math.log10(vol)
+            print(self.decibel)
+
+
+            if self.decibel > -43:
+                self.s.sendall(self.data)
+
+            #except:
+            #    pass
+    def disconnect(self):
+        self.connected = False
+        try:
+            self.s.shutdown(socket.SHUT_RDWR)
+            self.s.close()
+        except:
+            pass
+
+    def rms(self,data):
+        count = len(data) / 2
+        format = "%dh" % (count)
+        shorts = struct.unpack(format, data)
+        sum_squares = 0.0
+        for sample in shorts:
+            n = sample * (1.0 / 32768)
+            sum_squares += n * n
+        return math.sqrt(sum_squares / count)
 
 
 
