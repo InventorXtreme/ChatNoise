@@ -13,6 +13,5 @@ List of current features:
 7. It just works
 
 Upcoming features:
-1. Themes and other customizable widgets
-2. Cross server sync features to distribute server load and bypass many network blocks
-3. Username and server verification.
+1. Audio chat
+2. Notifications
