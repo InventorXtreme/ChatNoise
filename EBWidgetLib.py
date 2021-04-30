@@ -16,22 +16,25 @@ from multiprocessing import Process, Value, Array
 #Todo: Make a scrollbar on text widget
 
 class ImageChatFrame(tk.Frame):
-    def __init__(self,parent,imgfilename,server,port,*args,**kwargs):
+    def __init__(self,parent,imgfilename,server,port,line,*args,**kwargs):
         tk.Frame.__init__(self,parent,*args,**kwargs)
         self.filename = imgfilename
         self.server = server
         self.port = port
         self.parent = parent
+        self.line = line
+        self.string = "./cimg/cashedimage" + str(self.line)
         self.url = self.server + ":" + self.port + "/image/" + self.filename
-        urllib.request.urlretrieve(self.url, "./cimg/cashedimage")
-        self.imgd = Image.open("./cimg/cashedimage")
+        urllib.request.urlretrieve(self.url, self.string)
+        self.imgd = Image.open(self.string)
         self.tkimg = ImageTk.PhotoImage(self.imgd)
-        self.filetype = imghdr.what("./cimg/cashedimage", h=None)
+        self.filetype = imghdr.what(self.string, h=None)
+        self.imgd.close()
         if self.filetype != "gif":
             self.widget = tk.Label(self, image=self.tkimg)
             self.widget.pack()
         else:
-            self.widget = AnimatedGIF(self,"./cimg/cashedimage")
+            self.widget = AnimatedGIF(self,self.string)
             self.widget.start_animation()
             self.widget.pack()
 
@@ -53,7 +56,9 @@ class AudioMan(tk.Frame):
         if self.incall == False:
             if self.audioclient.connect() == 0:
                 self.joinbutton.config(text="Disconnect")
-                self.update_thread = threading.Thread(target=self.update).start()
+                self.update_thread = threading.Thread(target=self.update)
+                self.update_thread.daemon = True
+                self.update_thread.start()
                 self.incall = True
             else:
                 messagebox.showerror("AudioMan", "Error connecting to server")
@@ -158,6 +163,8 @@ class Client:
         try:
             self.s.shutdown(socket.SHUT_RDWR)
             self.s.close()
+            self.send_thread.join()
+            self.receive_thread.join()
         except:
             pass
 

@@ -10,6 +10,8 @@ from elevate import elevate
 from tkinter import filedialog
 import os
 from tkinter import simpledialog
+import shutil
+import gc
 try:
     from ctypes import windll
     win = True
@@ -102,6 +104,12 @@ class ChatReadOut(tk.Frame):
         self.textbox.pack(fill=tk.BOTH,expand=True)
 
         self.chan = ""
+        self.threadlist = []
+        self.imgrenderdict = {}
+        self.imglist = {}
+        self.imgdata = {}
+
+        self.linklist = {}
 
         self.old = "ree"
         self.new = "r"
@@ -134,10 +142,7 @@ class ChatReadOut(tk.Frame):
         self.lines = self.downloadedtext.split("\n")
         #print(self.lines)
         self.lines.reverse()
-        self.imglist = {}
-        self.imgdata = {}
 
-        self.linklist = {}
         self.linenum = len(self.lines)
         print(self.linenum)
         self.imgcount = 0
@@ -182,10 +187,20 @@ class ChatReadOut(tk.Frame):
         self.textbox.see(tk.END)
 
     def richimg(self):
+        self.loadednum = 0
         self.imagenum = 0
+
+        for self.temp in self.imgdata:
+            self.imgdata[self.temp].destroy()
+        self.imgdata.clear()
+        gc.collect()
         #topbar.statuschange("")
+
         for self.imgrender in self.imglist:
-            topbar.pro.pack(side=tk.RIGHT)
+            try:
+                topbar.pro.pack(side=tk.RIGHT)
+            except NameError:
+                pass
             self.imagenum += 1
             self.icment = 100 / self.imageback
             self.icment = self.icment / 2
@@ -194,24 +209,31 @@ class ChatReadOut(tk.Frame):
             self.ctrtrue = self.string.find(" ")
             if self.ctrtrue != -1:
                 self.imglist[self.imgrender] = "404error.png"
-            #self.textbox.see(tk.END)
             self.prepstring = str(self.imgrender) + ".0"
-            topbar.pro.step(self.icment)
-            topbar.statuschange("Loading Image " + str(self.imagenum) +  "/" +str(self.imageback) + "   ")
+            #topbar.pro.step(self.icment)
+            #topbar.statuschange("Loading Image " + str(self.imagenum) +  "/" +str(self.imageback) + "   ")
+            thread = threading.Thread(target=self.image_loader,args=[self.imgrender,self.imagenum])
+            self.threadlist.append(thread)
+            thread.start()
+            # self.imgdata[self.imgrender] = EBLib.ImageChatFrame(self.textbox,self.imglist[self.imgrender],self.server,self.port,self.imgrender)
+            # self.textbox.window_create(self.prepstring, window=self.imgdata[self.imgrender])
+            # print(self.imgrender,self.imglist[self.imgrender])
+            #topbar.pro.step(self.icment)
+        for self.thread in self.threadlist:
+            self.thread.join()
+        self.textbox.see(tk.END)
 
-            self.imgdata[self.imgrender] = EBLib.ImageChatFrame(self.textbox,self.imglist[self.imgrender],self.server,self.port)
-            self.textbox.window_create(self.prepstring, window=self.imgdata[self.imgrender])
-            print(self.imgrender,self.imglist[self.imgrender])
-            self.textbox.see(tk.END)
-            topbar.pro.step(self.icment)
-            self.imgdata[self.imgrender].widget.bind("<MouseWheel>", scroll_parent)
-            self.imgdata[self.imgrender].bind("<MouseWheel>", scroll_parent)
+
+
             # if self.imagenum == self.imageback:
             #     topbar.statuschange("Ready   ")
             #     topbar.pro.pack_forget()
-        topbar.statuschange("Ready   ")
-        topbar.pro['value'] = 0
-        topbar.pro.pack_forget()
+        try:
+            topbar.statuschange("Ready   ")
+            topbar.pro['value'] = 0
+            topbar.pro.pack_forget()
+        except NameError:
+            pass
     def richlink(self):
         for self.linkrender in self.linklist:
             self.outstring = self.linklist[self.linkrender]
@@ -221,6 +243,33 @@ class ChatReadOut(tk.Frame):
             print(self.linegood,self.outstring)
             self.textbox.insert(self.linegood, self.outstring, self.hypeman.add(self.outstring))
             self.textbox.see(tk.END)
+    def image_loader(self,render,id):
+
+        self.imgrenderdict[id] = render
+        self.int_imgrender = render
+        self.int_prepstring = str(self.imgrenderdict[id]) + ".0"
+        try:
+            topbar.pro.step(self.icment)
+        except NameError:
+            pass
+
+        self.imgdata[self.imgrenderdict[id] ] = EBLib.ImageChatFrame(self.textbox, self.imglist[self.imgrenderdict[id] ], self.server,
+                                                            self.port, self.imgrenderdict[id] )
+        self.textbox.window_create(str(self.imgrenderdict[id])+".0", window=self.imgdata[self.imgrenderdict[id] ])
+        print(self.imgrenderdict[id] , self.imglist[self.imgrenderdict[id] ])
+
+        self.imgdata[self.imgrenderdict[id] ].widget.bind("<MouseWheel>", scroll_parent)
+        self.imgdata[self.imgrenderdict[id] ].bind("<MouseWheel>", scroll_parent)
+        self.loadednum += 1
+        try:
+            topbar.pro.step(self.icment)
+            topbar.statuschange("Loading Image " + str(self.loadednum) + "/" + str(self.imageback) + "   ")
+        except NameError:
+            pass
+
+        self.textbox.see(tk.END)
+
+
 
 
 class EBClient(tk.Frame):
@@ -493,11 +542,25 @@ def scroll_parent(event):
     parent = root.nametowidget(event.widget.winfo_parent())
     parent.event_generate("<MouseWheel>", delta=event.delta, when="now")
 
+def on_closing():
+    folder = './cimg'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+    root.destroy()
 def mainfunc():
+    global clientversion
     global root
     global topbar
     global main
     global audio
+    global audioman
     try:
         if sys.argv[1] == "-u":
             elevate()
@@ -514,7 +577,6 @@ def mainfunc():
         pass
 
     root = tk.Tk()
-
     root.title("Electric Boogaloo Chat Noise Client" + clientversion)
 
     try:
@@ -634,6 +696,8 @@ def mainfunc():
     except:
         pass
     root.bind('<Return>', main.ebox.send)
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+
     main.chatbox.focus_set()
     root.mainloop()
     audio.disconnect()

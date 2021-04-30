@@ -379,7 +379,7 @@ def get_data():
     except requests.exceptions.ConnectionError:
         return "Error Connecting to server"
     x = down.text
-    with open("chatlogclient.txt", "w+") as file:
+    with open("chatlogclient.txt", "w+",encoding='utf-8') as file:
         file.write(x)
     with open("chatlogclient.txt", 'r') as fin:
         return fin.read()
@@ -406,7 +406,7 @@ def imgextract():
     except requests.exceptions.ConnectionError:
         return "Error Connecting to server"
     x = down.text
-    with open("chatlogclienti.txt", "w+") as file:
+    with open("chatlogclienti.txt", "w+",encoding='utf-8') as file:
         file.write(x)
     with open("chatlogclienti.txt", 'r') as fin:
         filestring = fin.read()
