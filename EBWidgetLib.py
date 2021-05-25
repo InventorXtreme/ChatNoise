@@ -9,11 +9,82 @@ import threading
 import pyaudio
 import struct
 import math
+from browser import *
 from tkinter import messagebox
+try:
+    # PyInstaller creates a temp folder and stores path in _MEIPASS
+    base_path = sys._MEIPASS
+except AttributeError:
+    base_path = os.path.abspath(".")
+
+# Python 3.8 things:
+with os.add_dll_directory(os.path.join(base_path, "VLC")):
+    import vlc
+import pafy
 import time
 from multiprocessing import Process, Value, Array
 #Todo make a status bar that can be placed at the bottom of the root window to show progress of image loading
 #Todo: Make a scrollbar on text widget
+
+class Screen(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Frame.__init__(self, parent, bg = 'black')
+        self.settings = { # Inizialazing dictionary settings
+            "width" : 200,
+            "height" : 150
+        }
+        self.settings.update(kwargs) # Changing the default settings
+        # Open the video source |temporary
+        self.video_source =  "https://www.youtube.com/watch?v=b8HO6hba9ZE"
+
+        # Canvas where to draw video output
+        self.canvas = tk.Canvas(self, width = self.settings['width'], height = self.settings['height'], bg = "black", highlightthickness = 0)
+        self.canvas.pack()
+
+        # Creating VLC player
+        self.instance = vlc.Instance()
+        self.player = self.instance.media_player_new()
+
+
+    def GetHandle(self):
+        # Getting frame ID
+        return self.winfo_id()
+
+    def play(self, _source):
+        # Function to start player from given source
+
+
+
+        self.vid = pafy.new(_source)
+        self.gamer = self.vid.getbest()
+        #self.player.play()
+        Media = self.instance.media_new(self.gamer.url)
+        Media.get_mrl()
+        self.player.set_media(Media)
+        self.player.set_hwnd(self.GetHandle())
+        self.player.play()
+
+
+class YoutubeEmbed(tk.Frame):
+    def __init__(self,parent,imgfilename,line,*args,**kwargs):
+        tk.Frame.__init__(self,parent,*args,**kwargs)
+        self.filename = imgfilename
+        # self.server = server
+        # self.port = port
+        self.parent = parent
+        self.line = line
+        # self.string = "./cimg/cashedimage" + str(self.line)
+        # self.url = self.server + ":" + self.port + "/image/" + self.filename
+        # urllib.request.urlretrieve(self.url, self.string)
+        # self.imgd = Image.open(self.string)
+        # self.tkimg = ImageTk.PhotoImage(self.imgd)
+        # self.filetype = imghdr.what(self.string, h=None)
+        # self.imgd.close()
+
+        self.widget = Screen(self)
+        #self.widget.play(self.filename)
+        print("yteframe")
+        self.widget.pack()
 
 class ImageChatFrame(tk.Frame):
     def __init__(self,parent,imgfilename,server,port,line,*args,**kwargs):

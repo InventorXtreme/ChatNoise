@@ -12,6 +12,7 @@ import os
 from tkinter import simpledialog
 import shutil
 import gc
+from cefpython3 import cefpython as cef
 try:
     from ctypes import windll
     win = True
@@ -22,12 +23,15 @@ import urllib
 import pickle
 import sys
 import dill
-
+from browser import *
 global root
 global topbar
 global main
 #elevate()
 
+
+# NOTE TO FUTURE SELF
+# use --add-data VLC;.\\VLC in pyinstaller to get vlc workin
 
 class TextInputBlock(tk.Frame):
     def __init__(self,parent,server,port,username,font,*args,**kwargs):
@@ -81,6 +85,14 @@ class TextInputBlock(tk.Frame):
         if self.chan != "":
             self.url = self.url + "&channel="+self.chan
         self.lrequest = requests.get(url=self.url)
+
+    def sendyte(self,*args):
+        self.linkname = simpledialog.askstring("Chat Noise -> Link", "Input YoutubeEmbed to send")
+        self.url = self.server + ":" + self.port + "?send=" + "|yte|" + self.linkname + "&id=" + self.getid()
+        if self.chan != "":
+            self.url = self.url + "&channel="+self.chan
+        self.lrequest = requests.get(url=self.url)
+
     def getid(self):
         self.res = EBLib.getid(self.server,self.port)
         self.out = str(int(self.res) + 1)
@@ -108,6 +120,8 @@ class ChatReadOut(tk.Frame):
         self.imgrenderdict = {}
         self.imglist = {}
         self.imgdata = {}
+        self.ytelist = {}
+        self.ytedata = {}
 
         self.linklist = {}
 
@@ -130,8 +144,13 @@ class ChatReadOut(tk.Frame):
                 print("refreshed")
                 time.sleep(2)
     def refresh(self):
+        self.imglist = {}
+        self.ytelist = {}
+        self.linklist = {}
+
         self.richthread = threading.Thread(target=self.richimg)
         self.highlightthread = threading.Thread(target=self.highlight)
+        self.ytethread = threading.Thread(target=self.richytembed)
         self.textbox.config(state=tk.NORMAL)
         self.textbox.see(tk.END)
         self.url = self.server + ":" + self.port + "?get"
@@ -158,20 +177,28 @@ class ChatReadOut(tk.Frame):
                         self.imgcount += 1
                 if self.currentline[0] == "|" and self.currentline[1] == "l":
                     self.linklist[self.linenum] = self.currentline[6:]
+                if self.currentline[0] == "|" and self.currentline[1] == "y":
+                    if self.imgcount != self.imageback:
+                        self.ytelist[self.linenum] = self.currentline[5:]
+                        self.imgcount += 1
+
             except:
                 pass
 
         self.textbox.delete('1.0', tk.END)
         self.textbox.insert('1.0', self.downloadedtext)
-        print(self.linklist,self.imglist)
+        print(self.linklist,self.imglist,self.ytelist)
         self.richthread.start()
         self.highlightthread.start()
+        #self.ytethread.start()
         self.richlink()
         # Old rich text code was here before multithreaded
 
         self.textbox.config(state=tk.DISABLED)
+        self.richytembed()
         self.richthread.join()
         self.highlightthread.join()
+        #self.ytethread.join()
         print("here")
 
     def setchan(self,channel):
@@ -185,6 +212,22 @@ class ChatReadOut(tk.Frame):
         self.textbox.highlight_pattern("=.*:", "green", regexp=True, start="end-25l")
         self.textbox.highlight_pattern("-.*:", "red", regexp=True, start="end-25l")
         self.textbox.see(tk.END)
+
+    def richytembed(self):
+        print('yte')
+        for self.temp in self.ytedata:
+            self.ytedata[self.temp].destroy()
+
+        self.ytedata.clear()
+        gc.collect()
+
+        for self.yterender in self.ytelist:
+            print("test")
+            self.ytedata[self.yterender] = EBLib.YoutubeEmbed(self.textbox,self.ytelist[self.yterender],self.yterender,width=200,height=100)
+            #self.ytedata[self.yterender].pack()
+            self.ytestring = str(self.yterender) + ".0"
+            self.textbox.window_create(self.ytestring,window=self.ytedata[self.yterender])
+
 
     def richimg(self):
         self.loadednum = 0
@@ -295,6 +338,7 @@ class EBClient(tk.Frame):
 class MenuAdd(tk.Frame):
     global main
     global audio
+    global pane
     def __init__(self,parent,server,port,clientversion,*args,**kwargs):
         #s = ttk.Style()
         #s.theme_use("")
@@ -355,12 +399,15 @@ class MenuAdd(tk.Frame):
     def linker(self,ebcontroller):
         self.ebcontroller=ebcontroller
         self.FileMenu.add_command(label="Refresh", command=self.ebcontroller.chatbox.trigger)
+        self.FileMenu.add_command(label="DooDooCord",command=self.doodoocord)
         self.FileMenu.add_command(label="About",command=self.about)
 
         self.SendMenu.add_command(label="Send Image", command = self.ebcontroller.ebox.sendimage)
         self.SendMenu.add_command(label="Send Link",command=self.ebcontroller.ebox.sendlink)
         self.SendMenu.add_command(label="Add Channel",command=self.addchan)
-        self.SendMenu.add_command(label="Back to Main Channel",command=lambda: main.changechan(""))
+        self.SendMenu.add_command(label="Send YTE",command=self.ebcontroller.ebox.sendyte)
+
+        self.FileMenu.add_command(label="Back to Main Channel",command=lambda: main.changechan(""))
 
         self.SetMenu.add_command(label="Change Username",command=changename)
         self.SetMenu.add_command(label="Change Port", command=changeport)
@@ -399,6 +446,12 @@ class MenuAdd(tk.Frame):
             self.AudioMenu.tk_popup(event.x_root, event.y_root + 15,0)
         finally:
             self.AudioMenu.grab_release()
+
+    def doodoocord(self):
+        pane.pack_forget()
+
+        gamer = MainFrame(root)
+        gamer.mainloop()
     def about(self):
         print("abouted")
         try:
@@ -561,6 +614,7 @@ def mainfunc():
     global main
     global audio
     global audioman
+    global pane
     try:
         if sys.argv[1] == "-u":
             elevate()
@@ -577,6 +631,11 @@ def mainfunc():
         pass
 
     root = tk.Tk()
+    switches = {
+        "enable-media-stream": "",
+        "use-fake-ui-for-media-stream": "",}
+    no = {}
+    cef.Initialize(no,switches)
     root.title("Electric Boogaloo Chat Noise Client" + clientversion)
 
     try:
@@ -699,6 +758,9 @@ def mainfunc():
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
     main.chatbox.focus_set()
+
+
+
     root.mainloop()
     audio.disconnect()
 
