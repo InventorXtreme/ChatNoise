@@ -15,3 +15,5 @@ List of current features:
 
 Upcoming features:
 1. Notifications
+2. Youtube/video embeds
+3. Better Settings
