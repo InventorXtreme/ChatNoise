@@ -1,6 +1,8 @@
+import os
 import webbrowser
 from PIL import Image, ImageTk
 import tkinter as tk
+from tkinter import ttk
 import urllib
 import requests
 import imghdr
@@ -9,7 +11,8 @@ import threading
 import pyaudio
 import struct
 import math
-from browser import *
+#from browser import *
+import sys
 from tkinter import messagebox
 try:
     # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -18,8 +21,13 @@ except AttributeError:
     base_path = os.path.abspath(".")
 
 # Python 3.8 things:
-with os.add_dll_directory(os.path.join(base_path, "VLC")):
+try:
+    with os.add_dll_directory(os.path.join(base_path, "VLC")):
+        import vlc
+except:
+    print("linux mode:tm:")
     import vlc
+
 import pafy
 import time
 from multiprocessing import Process, Value, Array
@@ -27,42 +35,68 @@ from multiprocessing import Process, Value, Array
 #Todo: Make a scrollbar on text widget
 
 class Screen(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, yturl, *args, **kwargs):
         tk.Frame.__init__(self, parent, bg = 'black')
         self.settings = { # Inizialazing dictionary settings
-            "width" : 200,
-            "height" : 150
+            "width" : 300,
+            "height" : 225
         }
+        self.parent = parent
         self.settings.update(kwargs) # Changing the default settings
         # Open the video source |temporary
         self.video_source =  "https://www.youtube.com/watch?v=b8HO6hba9ZE"
-
+        self.yturl = yturl
         # Canvas where to draw video output
         self.canvas = tk.Canvas(self, width = self.settings['width'], height = self.settings['height'], bg = "black", highlightthickness = 0)
         self.canvas.pack()
+        self.canvas.bind("<Button-1>",self.pause)
 
+
+
+    def vidinit(self):
         # Creating VLC player
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
+
+        self.vid = pafy.new(self.yturl)
+        self.gamer = self.vid.getbest()
+        # self.player.play()
+        Media = self.instance.media_new(self.gamer.url)
+        Media.get_mrl()
+        self.player.set_media(Media)
+        self.player.set_hwnd(self.GetHandle())
+        self.player.set_xwindow(self.GetHandle())
+        self.player.play()
+        self.player.video_set_mouse_input(False)
+        self.player.video_set_key_input(False)
+        self.progupdatethread = threading.Thread(target=self.updateprogress)
+        self.progupdatethread.start()
+
 
 
     def GetHandle(self):
         # Getting frame ID
         return self.winfo_id()
 
-    def play(self, _source):
-        # Function to start player from given source
+
+    def pause(self,no):
+        self.parent.toggle()
+        #
+        # print("help")
+        # #print(vlc.libvlc_media_player_get_position(self.player))
+        #
+        #
+        # self.player.pause()
+        # # self.progupdatethread = threading.Thread(target=self.updateprogress)
+        # # self.progupdatethread.start()
+    def updateprogress(self):
+        while True:
+            if self.player.is_playing() == 1:
+                self.parent.progset(vlc.libvlc_media_player_get_position(self.player))
+            time.sleep(0.016666)
 
 
 
-        self.vid = pafy.new(_source)
-        self.gamer = self.vid.getbest()
-        #self.player.play()
-        Media = self.instance.media_new(self.gamer.url)
-        Media.get_mrl()
-        self.player.set_media(Media)
-        self.player.set_hwnd(self.GetHandle())
-        self.player.play()
 
 
 class YoutubeEmbed(tk.Frame):
@@ -81,10 +115,55 @@ class YoutubeEmbed(tk.Frame):
         # self.filetype = imghdr.what(self.string, h=None)
         # self.imgd.close()
 
-        self.widget = Screen(self)
+        self.widget = Screen(self,self.filename)
         #self.widget.play(self.filename)
         print("yteframe")
         self.widget.pack()
+        self.widget.bind("<Button-1>",self.toggle)
+        #self.length = self.widget.player.get_position()
+        #self.length = vlc.libvlc_media_player_get_position(self.widget.player)
+        #print(self.length)
+        self.state = "ninit"
+        s = ttk.Style()
+        s.theme_use('alt')
+        s.configure("red.Horizontal.TProgressbar", foreground='red', background='red',troughcolor='gray10')
+        s.configure('my.TButton', font=("webdings", 10), padding=-3)
+
+        self.ctrlframe = tk.Frame(self,bg="gray10")
+
+        self.progvar = tk.IntVar()
+        self.progressbar = self.aliveness = ttk.Progressbar(self.ctrlframe, orient="horizontal", length=280, mode="determinate",variable=self.progvar,style="red.Horizontal.TProgressbar")
+        self.progressbar.pack(side=tk.RIGHT)
+        self.progressbar.bind('<Button-1>',self.setpos)
+        self.pausebutton = ttk.Button(self.ctrlframe,command=self.toggle,text="4",style='my.TButton',width=1)
+        self.pausebutton.pack(side=tk.LEFT)
+        self.ctrlframe.pack()
+    def toggle(self):
+        if self.state == "ninit":
+            self.widget.vidinit()
+            self.state = "playing"
+            self.pausebutton.config(text=";")
+            return
+        if self.state == "playing" or self.state == "paused":
+            self.widget.player.pause()
+            if self.state == "playing":
+                self.state = "paused"
+                self.pausebutton.config(text="4")
+            else:
+                self.state = "playing"
+                self.pausebutton.config(text=";")
+
+        #print(self.state)
+    def setpos(self,event):
+        #print(event.x/300)
+        vlc.libvlc_media_player_set_position(self.widget.player,event.x/280)
+        self.progvar.set(vlc.libvlc_media_player_get_position(self.widget.player)*100)
+
+
+    def progset(self,percentplayed):
+        #print(percentplayed)
+        self.progvar.set(percentplayed*100)
+
 
 class ImageChatFrame(tk.Frame):
     def __init__(self,parent,imgfilename,server,port,line,*args,**kwargs):

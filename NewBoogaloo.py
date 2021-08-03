@@ -12,7 +12,7 @@ import os
 from tkinter import simpledialog
 import shutil
 import gc
-from cefpython3 import cefpython as cef
+#from cefpython3 import cefpython as cef
 try:
     from ctypes import windll
     win = True
@@ -23,7 +23,7 @@ import urllib
 import pickle
 import sys
 import dill
-from browser import *
+#from browser import *
 global root
 global topbar
 global main
@@ -190,15 +190,15 @@ class ChatReadOut(tk.Frame):
         print(self.linklist,self.imglist,self.ytelist)
         self.richthread.start()
         self.highlightthread.start()
-        #self.ytethread.start()
+        self.ytethread.start()
         self.richlink()
         # Old rich text code was here before multithreaded
 
         self.textbox.config(state=tk.DISABLED)
-        self.richytembed()
+        #self.richytembed()
         self.richthread.join()
         self.highlightthread.join()
-        #self.ytethread.join()
+        self.ytethread.join()
         print("here")
 
     def setchan(self,channel):
@@ -227,7 +227,7 @@ class ChatReadOut(tk.Frame):
             #self.ytedata[self.yterender].pack()
             self.ytestring = str(self.yterender) + ".0"
             self.textbox.window_create(self.ytestring,window=self.ytedata[self.yterender])
-
+            self.textbox.see(tk.END)
 
     def richimg(self):
         self.loadednum = 0
@@ -635,7 +635,7 @@ def mainfunc():
         "enable-media-stream": "",
         "use-fake-ui-for-media-stream": "",}
     no = {}
-    cef.Initialize(no,switches)
+    #cef.Initialize(no,switches)
     root.title("Electric Boogaloo Chat Noise Client" + clientversion)
 
     try:
