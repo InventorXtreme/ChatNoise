@@ -94,8 +94,11 @@ class Screen(tk.Frame):
             if self.player.is_playing() == 1:
                 self.parent.progset(vlc.libvlc_media_player_get_position(self.player))
             time.sleep(0.016666)
-
-
+    def killit(self):
+        #self.player.stop()
+        self.progupdatethread.join()
+        self.player.release()
+        self.instance.release()
 
 
 
@@ -163,6 +166,8 @@ class YoutubeEmbed(tk.Frame):
     def progset(self,percentplayed):
         #print(percentplayed)
         self.progvar.set(percentplayed*100)
+    def end(self):
+        self.widget.killit()
 
 
 class ImageChatFrame(tk.Frame):

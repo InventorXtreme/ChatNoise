@@ -216,8 +216,8 @@ class ChatReadOut(tk.Frame):
     def richytembed(self):
         print('yte')
         for self.temp in self.ytedata:
+            self.ytedata[self.temp].end()
             self.ytedata[self.temp].destroy()
-
         self.ytedata.clear()
         gc.collect()
 
