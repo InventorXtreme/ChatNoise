@@ -50,6 +50,7 @@ class Screen(tk.Frame):
         self.canvas = tk.Canvas(self, width = self.settings['width'], height = self.settings['height'], bg = "black", highlightthickness = 0)
         self.canvas.pack()
         self.canvas.bind("<Button-1>",self.pause)
+        self.end = False
 
 
 
@@ -69,7 +70,7 @@ class Screen(tk.Frame):
         self.player.play()
         self.player.video_set_mouse_input(False)
         self.player.video_set_key_input(False)
-        self.progupdatethread = threading.Thread(target=self.updateprogress)
+        self.progupdatethread = threading.Thread(target=self.updateprogress,daemon=True)
         self.progupdatethread.start()
 
 
@@ -93,12 +94,49 @@ class Screen(tk.Frame):
         while True:
             if self.player.is_playing() == 1:
                 self.parent.progset(vlc.libvlc_media_player_get_position(self.player))
+                #print("inthreadrunn")
+            if self.end == True:
+                print("ended")
+                break
             time.sleep(0.016666)
     def killit(self):
-        #self.player.stop()
-        self.progupdatethread.join()
-        self.player.release()
-        self.instance.release()
+        print("[KILLIT] TRYING TO JOIN PROGRESS THREAD")
+        try:
+            self.end = True
+            self.progupdatethread.join(0.1)
+            if self.progupdatethread.is_alive() == True:
+                print("[WARNING] PROGRESS THREAD STALLING, SKIPPED")
+            else:
+                print("[OK] PROGRESS THREAD JOINED")
+
+        except:
+            print("progupdate already joined on killit")
+
+        print("[KILLIT] TRYING TO KILL PLAYERSTOP")
+        try:
+            self.player.stop()
+            print("[OK] PLAYERSTOP")
+
+        except:
+            print("player already stopped on killit")
+
+
+
+        print("[KILLIT] TRYING TO RELEASE PLAYER")
+        try:
+            self.player.release()
+            print("[OK] PLAYER RELEASED")
+
+        except:
+            print("player already released on killit")
+
+        print("[KILLIT] TRYING TO RELEASE INSTANCE")
+        try:
+            self.instance.release()
+            print("[OK] INSTANCE RELEASED")
+        except:
+            print("instance already released on killit")
+
 
 
 
@@ -141,7 +179,7 @@ class YoutubeEmbed(tk.Frame):
         self.pausebutton = ttk.Button(self.ctrlframe,command=self.toggle,text="4",style='my.TButton',width=1)
         self.pausebutton.pack(side=tk.LEFT)
         self.ctrlframe.pack()
-    def toggle(self):
+    def toggle(self,extra=0):
         if self.state == "ninit":
             self.widget.vidinit()
             self.state = "playing"

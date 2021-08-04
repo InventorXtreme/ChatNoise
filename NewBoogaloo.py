@@ -215,11 +215,15 @@ class ChatReadOut(tk.Frame):
 
     def richytembed(self):
         print('yte')
-        for self.temp in self.ytedata:
-            self.ytedata[self.temp].end()
-            self.ytedata[self.temp].destroy()
+        for self.tempyte in self.ytedata:
+            self.ytedata[self.tempyte].end()
+            self.ytedata[self.tempyte].destroy()
+
+
+            print("one done")
         self.ytedata.clear()
         gc.collect()
+        print(self.ytedata)
 
         for self.yterender in self.ytelist:
             print("test")
@@ -375,6 +379,7 @@ class MenuAdd(tk.Frame):
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
         self.SetDrop = tk.Label(self.mainbar,text="Settings",bg="gray10",fg="white")
+        #TODO: MAKE SETTINGS
         self.SetDrop.bind("<Button-1>",self.do_set_popup)
         self.spacer = tk.Label(self.statbar,text="    ",bg="gray10")
         self.pro = ttk.Progressbar(self.statbar,length=200)
@@ -606,6 +611,10 @@ def on_closing():
                 shutil.rmtree(file_path)
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
+    print("imgcachecleared")
+    for item in main.chatbox.ytedata:
+        main.chatbox.ytedata[item].end()
+        main.chatbox.ytedata[item].destroy()
     root.destroy()
 def mainfunc():
     global clientversion
@@ -763,6 +772,7 @@ def mainfunc():
 
     root.mainloop()
     audio.disconnect()
+
 
 if __name__ == "__main__":
     clientversion = "- 0.11.0"
