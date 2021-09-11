@@ -131,7 +131,7 @@ class ChatReadOut(tk.Frame):
     def trigger(self):
         self.new = "-20"
         self.old = "-20"
-        print("here")
+        print("[USER] MANNUAL REFRESH TRIGGERED")
     def configure(self,event):
         self.textbox.see(tk.END)
     def runable(self):
@@ -141,9 +141,10 @@ class ChatReadOut(tk.Frame):
             #print(self.old,self.new)
             if self.new != self.old:
                 self.refresh()
-                print("refreshed")
+                print("[RUNABLE THREAD] REFRESHED")
                 time.sleep(2)
     def refresh(self):
+        print("[REFRESH] STARTING REFRESH")
         self.imglist = {}
         self.ytelist = {}
         self.linklist = {}
@@ -163,7 +164,7 @@ class ChatReadOut(tk.Frame):
         self.lines.reverse()
 
         self.linenum = len(self.lines)
-        print(self.linenum)
+        #print(self.linenum)
         self.imgcount = 0
 
         for self.currentline in self.lines:
@@ -187,7 +188,7 @@ class ChatReadOut(tk.Frame):
 
         self.textbox.delete('1.0', tk.END)
         self.textbox.insert('1.0', self.downloadedtext)
-        print(self.linklist,self.imglist,self.ytelist)
+        #print(self.linklist,self.imglist,self.ytelist)
         self.richthread.start()
         self.highlightthread.start()
         self.ytethread.start()
@@ -199,7 +200,7 @@ class ChatReadOut(tk.Frame):
         self.richthread.join()
         self.highlightthread.join()
         self.ytethread.join()
-        print("here")
+        print("[REFESH] OK")
 
     def setchan(self,channel):
         self.chan = channel
@@ -214,19 +215,17 @@ class ChatReadOut(tk.Frame):
         self.textbox.see(tk.END)
 
     def richytembed(self):
-        print('yte')
+        print("[RICH EMBEDS] Starting Rich YTE")
         for self.tempyte in self.ytedata:
             self.ytedata[self.tempyte].end()
             self.ytedata[self.tempyte].destroy()
 
-
-            print("one done")
         self.ytedata.clear()
         gc.collect()
-        print(self.ytedata)
+        #print(self.ytedata)
 
         for self.yterender in self.ytelist:
-            print("test")
+            print("[RYTE] Rendered one embed")
             self.ytedata[self.yterender] = EBLib.YoutubeEmbed(self.textbox,self.ytelist[self.yterender],self.yterender,width=200,height=100)
             #self.ytedata[self.yterender].pack()
             self.ytestring = str(self.yterender) + ".0"
@@ -287,7 +286,7 @@ class ChatReadOut(tk.Frame):
             self.linegood = str(self.linkrender+1) + ".0"
             self.lineclear = str(self.linkrender+1) + ".999999999"
             self.textbox.delete(self.linegood,self.lineclear)
-            print(self.linegood,self.outstring)
+            print("rendering link at" + self.linegood + "with value of " + self.outstring)
             self.textbox.insert(self.linegood, self.outstring, self.hypeman.add(self.outstring))
             self.textbox.see(tk.END)
     def image_loader(self,render,id):
@@ -303,7 +302,7 @@ class ChatReadOut(tk.Frame):
         self.imgdata[self.imgrenderdict[id] ] = EBLib.ImageChatFrame(self.textbox, self.imglist[self.imgrenderdict[id] ], self.server,
                                                             self.port, self.imgrenderdict[id] )
         self.textbox.window_create(str(self.imgrenderdict[id])+".0", window=self.imgdata[self.imgrenderdict[id] ])
-        print(self.imgrenderdict[id] , self.imglist[self.imgrenderdict[id] ])
+        print("rendering image at" + self.imgrenderdict[id] + "with data of " + self.imglist[self.imgrenderdict[id] ])
 
         self.imgdata[self.imgrenderdict[id] ].widget.bind("<MouseWheel>", scroll_parent)
         self.imgdata[self.imgrenderdict[id] ].bind("<MouseWheel>", scroll_parent)
@@ -373,11 +372,11 @@ class MenuAdd(tk.Frame):
                                 activebackground='#004c99', activeforeground='white',
                                 tearoff=0)
 
-        self.AudioDrop = tk.Label(self.mainbar,text="Audio",bg="gray10",fg="white")
-        self.AudioDrop.bind("<Button-1>",self.do_audio_popup)
-        self.AudioMenu = tk.Menu(parent, background='gray10', foreground='white',
-                                activebackground='#004c99', activeforeground='white',
-                                tearoff=0)
+        #self.AudioDrop = tk.Label(self.mainbar,text="Audio",bg="gray10",fg="white")
+        #self.AudioDrop.bind("<Button-1>",self.do_audio_popup)
+        #self.AudioMenu = tk.Menu(parent, background='gray10', foreground='white',
+        #                        activebackground='#004c99', activeforeground='white',
+        #                        tearoff=0)
         self.SetDrop = tk.Label(self.mainbar,text="Settings",bg="gray10",fg="white")
         #TODO: MAKE SETTINGS
         self.SetDrop.bind("<Button-1>",self.do_set_popup)
@@ -391,7 +390,7 @@ class MenuAdd(tk.Frame):
         self.spacer.pack(side=tk.RIGHT)
         self.spacer2.pack(side=tk.LEFT)
         self.SendDrop.pack(side=tk.LEFT)
-        self.AudioDrop.pack(side=tk.LEFT)
+        #self.AudioDrop.pack(side=tk.LEFT)
         self.SetDrop.pack(side=tk.LEFT)
         self.spacer.pack(side=tk.RIGHT)
         self.pro.pack(side=tk.RIGHT)
@@ -404,7 +403,7 @@ class MenuAdd(tk.Frame):
     def linker(self,ebcontroller):
         self.ebcontroller=ebcontroller
         self.FileMenu.add_command(label="Refresh", command=self.ebcontroller.chatbox.trigger)
-        self.FileMenu.add_command(label="DooDooCord",command=self.doodoocord)
+        #self.FileMenu.add_command(label="DooDooCord",command=self.doodoocord)
         self.FileMenu.add_command(label="About",command=self.about)
 
         self.SendMenu.add_command(label="Send Image", command = self.ebcontroller.ebox.sendimage)
@@ -417,12 +416,12 @@ class MenuAdd(tk.Frame):
         self.SetMenu.add_command(label="Change Username",command=changename)
         self.SetMenu.add_command(label="Change Port", command=changeport)
         self.SetMenu.add_command(label="Change Server", command=changeserver)
-        self.SetMenu.add_command(label="Change Audio Server",command=changeaudioserver)
-        self.SetMenu.add_command(label="Change Audio Port",comman=changeaudioport)
+        #self.SetMenu.add_command(label="Change Audio Server",command=changeaudioserver)
+        #self.SetMenu.add_command(label="Change Audio Port",comman=changeaudioport)
         self.SetMenu.add_command(label="Change ImageNumber",command=changeimgload)
 
-        self.AudioMenu.add_command(label="Connect",command=audio.connect)
-        self.AudioMenu.add_command(label="Disconnect",command=audio.disconnect)
+        #self.AudioMenu.add_command(label="Connect",command=audio.connect)
+        #self.AudioMenu.add_command(label="Disconnect",command=audio.disconnect)
     def do_file_popup(self,event):
         # display the popup menu
         try:
@@ -446,24 +445,19 @@ class MenuAdd(tk.Frame):
         finally:
             self.SetMenu.grab_release()
 
-    def do_audio_popup(self,event):
-        try:
-            self.AudioMenu.tk_popup(event.x_root, event.y_root + 15,0)
-        finally:
-            self.AudioMenu.grab_release()
+    #def do_audio_popup(self,event):
+    #    try:
+    #        self.AudioMenu.tk_popup(event.x_root, event.y_root + 15,0)
+    #    finally:
+    #        self.AudioMenu.grab_release()
 
-    def doodoocord(self):
-        pane.pack_forget()
-
-        gamer = MainFrame(root)
-        gamer.mainloop()
     def about(self):
-        print("abouted")
+        print("[USER] ABOUT BOX OPENED")
         try:
             self.aurl = self.server + ":" + self.port + "/ver"
             self.temp = requests.get(self.aurl)
             self.serverversion = self.temp.text
-            print(self.serverversion)
+            #print(self.serverversion)
         except:
             self.serverversion = "Error connecting to server"
 
@@ -481,7 +475,7 @@ class MenuAdd(tk.Frame):
 
 
 def checkupdates(versionu):
-    print(versionu)
+    #print(versionu)
     try:    
         is_adminp = ctypes.windll.shell32.IsUserAnAdmin()
     except:
@@ -503,7 +497,7 @@ def checkupdates(versionu):
             download_folder = os.path.expanduser("~") + "/Downloads/"
             snip = verrequest.text[2:]
             url = "https://github.com/InventorXtreme/ChatNoise/releases/download/" + snip + "/setup.exe"
-            print(url)
+            #print(url)
             # messagebox.showinfo("Downloading Update...","Downloading Update...")
             if is_admin == False:
                 root.destroy()
@@ -611,7 +605,7 @@ def on_closing():
                 shutil.rmtree(file_path)
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
-    print("imgcachecleared")
+    print("[KILLIT] CLEARED IMAGE CACHE")
     for item in main.chatbox.ytedata:
         main.chatbox.ytedata[item].end()
         main.chatbox.ytedata[item].destroy()
@@ -650,23 +644,23 @@ def mainfunc():
     try:
         config = pickle.load(open("config.p", "rb"))
         audioserver = config["audioserver"]
-        print("here")
+        print("[STARTIT] LOADED AUDIOSERVER VALUE")
         audioport = config["audioport"]
-        print("here")
+        print("[STARTIT] LOADED AUDIOPORT VALUE")
 
         username = config["username"]
-        print("here")
+        print("[STARTIT] LOADED USERNAME VALUE")
 
         server = config["server"]
-        print("here")
+        print("[STARTIT] LOADED SERVER VALUE")
 
         port = config["port"]
-        print("here")
+        print("[STARTIT] LOADED PORT VALUE")
 
         imgnum = int(config["imgnum"])
-        print("here")
+        print("[STARTIT] LOADED IMGNUM VALUE")
 
-        print("config loaded")
+        print("[STARTIT] CONFIG LOADED")
         try:
             audio = EBLib.Client(audioserver,audioport,root)
         except:
@@ -677,8 +671,10 @@ def mainfunc():
         serversetup = simpledialog.askstring("Setup","Please enter your server including the http:// or https://")
         portsetup = simpledialog.askstring("Setup","Please enter your port")
         imgnumsetup = int(simpledialog.askstring("Setup", "Please enter the number of images to load"))
-        audioserversetup = simpledialog.askstring("Setup","Please enter the server to use for audio")
-        audioport = simpledialog.askstring('Setup', "Please enter the port to use for audio")
+        #audioserversetup = simpledialog.askstring("Setup","Please enter the server to use for audio")
+        #audioport = simpledialog.askstring('Setup', "Please enter the port to use for audio")
+        audioserversetup = ""
+        audioport = "0"
         config = {}
         if isinstance(imgnumsetup, (int, float, complex)) and not isinstance(imgnumsetup, bool):
             config["server"] = serversetup
@@ -693,6 +689,8 @@ def mainfunc():
             server = config["server"]
             imgnum = config["imgnum"]
             port = config["port"]
+            audioserver = config["audioserver"]
+            audioport = config["audioport"]
             print("config loaded")
             audio = EBLib.Client(audioserver, audioport,root)
 
@@ -719,7 +717,7 @@ def mainfunc():
 
     try:
         chanurl = server+ ":" +port + "/chanlist/"
-        print(chanurl)
+        print("[STARTIT] LOADING CHANLIST FROM " +chanurl)
 
 
         chanlist = EBLib.ChannelListBox(root, main, bg="gray10")
@@ -731,8 +729,8 @@ def mainfunc():
 
 
         # chanlist.pack(fill=tk.Y,side=tk.LEFT)
-        audioman = EBLib.AudioMan(chanlist, audio, bg="gray10")
-        audioman.pack()
+        #audioman = EBLib.AudioMan(chanlist, audio, bg="gray10")
+        #audioman.pack()
 
 
         #pane.add(audioman, stretch="always")
